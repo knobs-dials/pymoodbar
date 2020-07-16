@@ -13,22 +13,28 @@ Why?
 
 Currently runs ffmpeg/avconv in a subprocess and asks it for a PCM stream.
 
-
-## Further experiments
-
-![text-mode output](textmood.png?raw=true)
-
-
 ## Dependencies:
 * numpy, scipy
 * PIL (for mood-to-image code)
 * ffmpeg/avconv being in the PATH, currently on linux
 
 
+
+## Further experiments
+ 
+- moodbar-text - unicode graphs and stuff
+![text-mode output](textmood.png?raw=true)
+
+
+- moodbar-correlate - idea like that
+     - finding duplicates
+     - given some options, you can try to avoid harsh genre changes based on similar high/low distribution
+
+
 ## TODO:
-- look at using PyDub instead of my own ffmpeg wrapper
-- Look at further optimizations, it takes a few seconds per song.
-- look at 
+- Look at further optimizations for the analysis, it still takes a few seconds per song
+- look at using PyDub (or similar) instead of my own ffmpeg wrapper
+- look at
     - https://github.com/spezifisch/pymoodbar (py wrapper around the analysis part in C?)
     - https://github.com/globeone/moodbar  (drop-in command, C?)
     - https://github.com/exaile/moodbar  (drop-in command, C?)
