@@ -23,7 +23,7 @@ Currently runs ffmpeg/avconv in a subprocess and asks it for a PCM stream.
 ## Further experiments
  
 - moodbar-text - unicode graphs and stuff
-![text-mode output](textmood.png?raw=true)
+![text-mode output](textmood.png?raw=true) 
 
 
 - moodbar-correlate - idea like that
