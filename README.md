@@ -23,9 +23,9 @@ Currently runs ffmpeg/avconv in a subprocess and asks it for a PCM stream.
 - look at using PyDub instead of my own ffmpeg wrapper
 - Look at further optimizations, it takes a few seconds per song.
 - look at 
--- https://github.com/spezifisch/pymoodbar (py wrapper around the analysis part in C?)
--- https://github.com/globeone/moodbar  (drop-in command, C?)
--- https://github.com/exaile/moodbar  (drop-in command, C?)
+    - https://github.com/spezifisch/pymoodbar (py wrapper around the analysis part in C?)
+    - https://github.com/globeone/moodbar  (drop-in command, C?)
+    - https://github.com/exaile/moodbar  (drop-in command, C?)
 
 ## See also 
 - G Wood, S O'Keefe (2005), "[On Techniques for Content-Based Visual Annotation to Aid Intra-Track Music Navigation](https://www.google.com/search?q=On%20Techniques%20for%20Content-Based%20Visual%20Annotation%20to%20Aid%20Intra-Track%20Music%20Navigation%20pdf)"
