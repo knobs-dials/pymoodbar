@@ -14,6 +14,11 @@ Why?
 Currently runs ffmpeg/avconv in a subprocess and asks it for a PCM stream.
 
 
+## Further experiments
+
+![text-mode output](textmood.png?raw=true)
+
+
 ## Dependencies:
 * numpy, scipy
 * PIL (for mood-to-image code)
