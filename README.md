@@ -5,7 +5,7 @@ Python (numpy, scipy) implementation of moodbar, plus some experiments.
 ![A few examples: lofi, reggae, rock, calm electro, crust, indie band, ethereal/vocal](examples.png?raw=true)
 
 
-Why?
+## Why?
 
 Partly for exerise,
  partly because I wanted an easier testbed to experiment with various transforms (like critical bands and equal loudness),
@@ -13,9 +13,15 @@ Partly for exerise,
  partly because the original was annoying to get to compile, 
  and I wanted to see how useful it might be as a fingerprint or comparison sort of thing.
 
-Currently runs ffmpeg/avconv in a subprocess and asks it for a PCM stream.
+## Parts
 
-## Dependencies:
+Currently runs ffmpeg/avconv in a subprocess and asks it for a mono PCM stream,
+does some FFTs, windowing, applies equal-loudness curve, sorts energy into Bark-style critical bands.
+
+Calculates the classic RGB-per-1000th-song .mood file, but also a PNG that is a Bark-style spectrogram colored by the .mood colors.
+
+
+## Dependencies
 * numpy, scipy
 * PIL (for mood-to-image code)
 * ffmpeg/avconv being in the PATH, currently on linux
