@@ -24,12 +24,12 @@ Currently runs ffmpeg/avconv in a subprocess and asks it for a PCM stream.
 
 ## Further experiments
  
-- moodbar-text - unicode graphs and stuff
+- moodbar-text - shell output, with or without fancy unicode graph stuff. Because why not?
 ![text-mode output](textmood.png?raw=true) 
 
 
-- moodbar-correlate - idea like that
-     - finding duplicates
+- moodbar-correlate - ideas like that
+     - you can probably find duplicates
      - given some options, you can try to avoid harsh genre changes based on similar high/low distribution
 
 
