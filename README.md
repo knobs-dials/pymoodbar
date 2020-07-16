@@ -29,7 +29,7 @@ Currently runs ffmpeg/avconv in a subprocess and asks it for a PCM stream.
 
 
 - moodbar-correlate - ideas like that
-     - you can probably find duplicates
+     - you can probably find duplicates (moodbar already makes it easier to inspect suspected duplicates)
      - given some options, you can try to avoid harsh genre changes based on similar high/low distribution
 
 
