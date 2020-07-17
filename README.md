@@ -6,12 +6,13 @@ Python (numpy, scipy) implementation of moodbar, plus some experiments.
 
 
 ## Why?
-
 Partly for exerise,
  partly because I wanted an easier testbed to experiment with various transforms (like critical bands and equal loudness),
- partly because I wanted a variant that shows more spectral detail, and maybe later things like beat and rhythm,
- partly because the original was annoying to get to compile, 
- and I wanted to see how useful it might be as a fingerprint or comparison sort of thing.
+ partly because I wanted images with more spectral detail, and maybe later things like beat and rhythm,
+ partly because the original was annoying to get to compile, and partly because I wanted to see how useful it might be as a fingerprint or comparison sort of thing.
+
+So if you want drop-ins for moodbar generation, you probably want one the links below and not this one.
+
 
 ## Parts
 
