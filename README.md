@@ -35,7 +35,7 @@ Calculates the classic RGB-per-1000th-song .mood file, but also a PNG that is a 
 ![text-mode output](textmood.png?raw=true) 
 
 
-- moodbar-correlate - ideas like that
+- moodbar-correlate - ideas like that...
      - you can probably find duplicates (moodbar already makes it easier to inspect suspected duplicates)
      - given some options, you can try to avoid harsh genre changes based on similar high/low distribution
 
