@@ -1,6 +1,6 @@
 # pymoodbar
 
-Python (numpy, scipy) implementation of moodbar, plus some experiments.
+Python (numpy, scipy) implementation of moodbar, plus some experiments, in particular trying for a little more detail:
 
 ![A few examples: lofi, reggae, rock, calm electro, crust, indie band, ethereal/vocal](examples.png?raw=true)
 
