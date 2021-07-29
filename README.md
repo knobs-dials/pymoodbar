@@ -22,7 +22,9 @@ Currently
 - applies equal-loudness curve, 
 - sorts energy into Bark-style critical bands.
 
-Calculates the classic RGB-per-1000th-song .mood file, but also a PNG that is a Bark-style spectrogram colored by the .mood colors.
+Generates 
+- the classic RGB-per-1000th-song .mood file
+- and a PNG that is a Bark-style spectrogram, colored by the .mood colors
 
 
 ## Dependencies
