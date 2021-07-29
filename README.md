@@ -18,9 +18,11 @@ So if you want a drop-in that is fast, or generates the .mood files the same way
 * ffmpeg/avconv being in the PATH, currently on linux
 
 
-## Main part
+## Parts
 
-### Moodbar-generate
+### moodbar-generate
+The main code
+
 - runs ffmpeg/avconv in a subprocess and asks it for a mono PCM stream,
 - does some FFTs, windowing, 
 - applies equal-loudness curve, 
@@ -32,15 +34,13 @@ So if you want a drop-in that is fast, or generates the .mood files the same way
 ![A few examples: lofi, reggae, rock, calm electro, crust, indie band, ethereal/vocal](screenshots/examples.png?raw=true)
 
 
-## Further experiments
- 
-### moodbar-text 
+### moodbar-text (plaything)
 
 Shell output, with fancy unicode graph stuff and truecolor (`-t`, it'll be 8-color and ugly without). Because why not?
 ![text-mode output, unsorted selection of songs](screenshots/textmood_tc.png?raw=true) 
 
 
-### moodbar-correlate 
+### moodbar-correlate  (experiment)
 
 Based on the ideas that...
 - you can probably find duplicates   (moodbar images already makes it easier to visually inspect suspected duplicates)
@@ -50,6 +50,7 @@ Based on the ideas that...
 ## TODO:
 - check that the FFT sound code actually makes sense
 - do STFT with overlapping windows
+- actually implement moodbar-correlate
 - Look at further optimizations for the analysis, it still takes a few seconds per song
 - look at using PyDub (or similar) instead of my own ffmpeg wrapper
 - look at
