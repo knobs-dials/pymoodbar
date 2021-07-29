@@ -221,7 +221,7 @@ if __name__ == '__main__':
                     for fn in fs:
                         ffn = os.path.join(r, fn)
 
-                        fnp = helpers_path.fn_parts(ffn)
+                        fnp = fn_parts(ffn)
                         #print fnp
                         ext = fnp['ext']
                         if ext == None or ext.lower() not in ('mp3','ogg',
