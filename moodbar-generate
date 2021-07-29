@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 ''' By default it runs on a single file - I think I did that to have it be a drop-in.
     To run it on a bunch of files, use -r. 
 '''
@@ -15,10 +15,10 @@ from PIL import Image
 
 import helpers_moodbar
 import helpers_progressbar
-import helpers_exec
 
-VERBOSE = False
 
+
+### Helpers
 def fn_parts(pathstr):
     """ For a given path, returns a dict with
         dirname, basename, basename without extension, extension
@@ -43,6 +43,23 @@ def fn_parts(pathstr):
         ext   = basen[dotinbase+1:]
     return {'dir':dirn, 'base':basen , 'noext':noext , 'ext':ext, 'fullpathnoext':os.path.join(dirn,noext) }
 
+def num_cpus(fallback=None):
+    # I have a much better version somewhere.
+    cprocs = 0
+    try:
+        f = open('/proc/cpuinfo')
+        for line in f:
+            if 'processor' in line:
+                cprocs += 1
+    except:
+        raise
+    finally:
+        f.close()
+
+    if cprocs==0:
+        return fallback
+    else:
+        return cprocs
 
 
 def proctitle(s):
@@ -52,8 +69,11 @@ def proctitle(s):
     except ImportError:
         pass
 
+
+
+
     
-def single(ffn, force_redo=False):
+def single(ffn, force_redo=False, verbose=False):
     fnp = fn_parts(ffn)
     fpextless = fnp['fullpathnoext']
     fp_png  = fpextless+'.mood.png'
@@ -61,17 +81,17 @@ def single(ffn, force_redo=False):
 
     try:
         if force_redo or (not (os.path.exists(fp_mood) and os.stat(fp_mood).st_size==3000)):
-            if VERBOSE:
-                print( "Generating mood for %r"%arg)
+            if verbose:
+                print( "Generating mood for %r"%ffn )
             barkary, moodary = helpers_moodbar.make_mood(ffn)
             if barkary is None: # make_mood decided nope.
                 print( "Failed for %r"%ffn)
                 return
             
-            if VERBOSE:
+            if verbose:
                 print( "Writing mood file to %r"%fp_mood)
             filebytes = moodary.tostring()
-            f = file(fp_mood,'wb')
+            f = open(fp_mood,'wb')
             f.write(filebytes)
             f.close()
 
@@ -79,7 +99,7 @@ def single(ffn, force_redo=False):
             im.save(fp_png)
 
         if not os.path.exists(fp_png):
-            if VERBOSE:
+            if verbose:
                 print( "Writing thumbnail to %r"%fp_png)
             im = helpers_moodbar.mood_image(fp_mood)
             im.save(fp_png)
@@ -123,7 +143,7 @@ if __name__ == '__main__':
             ffn = os.path.abspath(fn)
             if os.path.isfile(ffn):
                 # CONSIDER: pool this one too (for when other things call this without parallelizing).
-                single(ffn, force_redo=options.redo)
+                single(ffn, force_redo=options.redo, verbose=options.verbose)
                 
     else: # scan directories, run copies of ourself without -r
         proctitle( 'moodbar-generate;scan' )
@@ -257,7 +277,9 @@ if __name__ == '__main__':
                 except:
                     pass
                 if procs==None:
-                    procs = helpers_exec.num_cpus(fallback=3)+2
+
+
+                    procs = num_cpus(fallback=3)+2
 
                 mypool = multiprocessing.Pool(procs)
                 pb = helpers_progressbar.ProgressBar( len(todo)) #, style=helpers_progressbar.style_vertical )

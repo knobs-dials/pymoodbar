@@ -1,8 +1,5 @@
 import math,random,datetime, re, stat
 
-
-
-
 ### Magnitude consideration
 
 def kmg(amount,kilo=1000, append='',thresh=15, nextup=0.9, rstrip0=True, extradigits=0, i_for_1024=True):
@@ -446,10 +443,10 @@ def shortish_dt(unixtime_or_datetime, strftime='%b %d %H:%M', omit_today=False):
         You might want "%b %d %H:%M" for "Mon Mar 07 10:32" instead.
     '''
     try:
-        if type(unixtime_or_datetime) in (str,unicode):
+        if type(unixtime_or_datetime) in (type(''),):
             unixtime_or_datetime = float(unixtime_or_datetime) # try to interpret as unixtime-as-string
 
-        if type(unixtime_or_datetime) in (int,float,long):
+        if type(unixtime_or_datetime) in (int,float):
             unixtime_or_datetime = datetime.datetime.fromtimestamp(unixtime_or_datetime)
 
         if omit_today and unixtime_or_datetime.date() == datetime.date.today():

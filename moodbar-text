@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 '''
     Shows .mood file on the console, with colors and/or unicode characters 
 '''

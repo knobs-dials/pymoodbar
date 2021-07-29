@@ -1,4 +1,3 @@
-#!/usr/bin/python
 import os
 import sys
 import time
@@ -141,7 +140,7 @@ def covering_windows(ary,  window_size,  min_overlap):
         
         # brute force this, I'm too lazy to think about it right now - though I expect it's just a sub and div. Ahem :)
         wsteps = None
-        for numsteps in range( max(2,w / window_size), w/2): # sane limits
+        for numsteps in range( int( max(2,w / window_size)), int(w/2) ): # sane limits
             st = numpy.linspace( window_size, w, numsteps )
             #print window_size, w, numsteps, st
             stepsize = st[1]-st[0]
@@ -226,7 +225,7 @@ def make_mood(mediafilename):
     #    print "SKIP, too small (%s sec (%d samples) for %r)"%(estlength_sec, nsamples, mediafilename)
     #    # See if we can just force fftsize smaller instead?
     #    return None,None
-    bucketsize  = 1+fftsize/2
+    bucketsize  = int( 1+fftsize/2 )
 
     
     chunklen_samples = int( nsamples / 1000. )
@@ -509,11 +508,8 @@ def mood_image3(filename, height=21, width=None):
     if width:
         newsize[0] = width
     newsize = tuple(newsize)
-
-    print newsize
     if img.size != newsize:
-        img = img.resize( newsize, Image.BICUBIC )
-        #img = img.resize( newsize, Image.NEAREST )
+        img = img.resize( newsize, Image.NEAREST ) # assuming it's just vertical, this may be a little faster- but CONSIDER BILINEAR is more generic?
     return img
 
     

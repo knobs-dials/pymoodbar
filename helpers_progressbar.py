@@ -91,7 +91,7 @@ class ProgressBar(object):
     def _sigwinch_trigger(self):
         self.cols(update=True)
         
-    def set_numjobs(numjobs):
+    def set_numjobs(self, numjobs):
         ' In case you change your mind later (or like argumentless construction) '
         self.jobs = numjobs
 
@@ -165,7 +165,7 @@ class ProgressBar(object):
         if self.style == style_invert:
             intxt = amounts
             intxt+= '    '+eta
-            intxt = '%s%s'%( ' '*( (barcols-len(intxt))/2),  intxt )
+            intxt = '%s%s'%( ' '*  int( (barcols-len(intxt))/2),  intxt )
         else:
             intxt = ''
         
@@ -284,7 +284,8 @@ class ProgressBar(object):
             sameline (Default true) prints on the same line, assuming ANSI
               you may want to not do this if you're also outputting a bunch of other stuff.
 
-            if print_for_me == None, it returns a string (or None) rather than printing it.        
+            if print_for_me == None, it returns a string (or None)
+               if it's not none, it's expected to be a stream we can write() on.
         '''
         if interval == None:
             interval = self.interval_sec
@@ -302,7 +303,7 @@ class ProgressBar(object):
             s += self.bar()
 
             if print_for_me:
-                print_for_me.write(s.encode('utf8') + '\r') # extra carriage return so that any other messages overwrite the line, instead of starting from near its end
+                print_for_me.write( s + '\r') # extra carriage return so that any other messages overwrite the line, instead of starting from near its end
                 if alsoflush:
                     print_for_me.flush()
             else:
@@ -314,8 +315,8 @@ class ProgressBar(object):
     def debug_print(self):
         import helpers_format
         left = max(0,  self.jobs - self.done)
-        print "Jobs are taking %.3fsec on average, stdev %.3f"%(self.mean, self.std)
-        print 'Did %d jobs of %d'%(self.done, self.jobs)
+        print( "Jobs are taking %.3fsec on average, stdev %.3f"%(self.mean, self.std))
+        print( 'Did %d jobs of %d'%(self.done, self.jobs))
         #print "Time left: %s (+- %s)"%(
         #    helpers_format.nicetimedelta( self.mean*left ),
         #    helpers_format.nicetimedelta( self.std*left ),
@@ -346,7 +347,7 @@ def main():
         simjobs = random.randint( int(0.9*jobbase), int(1.1*jobbase) )
 
         try:
-            print "Style %r"%name
+            print( "Style %r"%name )
             pb = ProgressBar( simjobs, style, colnum=colnum, interval_sec=0.1)
             pb.start()
             for i in range(simjobs):

@@ -60,7 +60,7 @@ def _err_reader(fh, buf, sharedstate):
 
         I don't think I can use universal_newlines when I want the same process's stdout to be binary, so we do it ourselves.
     '''
-    line = ''
+    line = b''
     while True:
         ch = fh.read(1) 
         #print( "READCH=%r"%ch )
@@ -69,14 +69,14 @@ def _err_reader(fh, buf, sharedstate):
             if len(line)>0: # output what's left
                 buf.append(line)
             break
-        if ch in '\r\n': # newline?  output line
+        if ch in b'\r\n': # newline?  output line
             #print( '[stderr]'+repr(line) )
             buf.append(line)
-            line=''
+            line = b''
         else:
-            line+=ch
+            line += ch
             # last line doesn't necessarily get a newline, so test is more interesting
-            if line.startswith('Error while decoding stream'):
+            if line.startswith(b'Error while decoding stream'):
                 #print( '[stderr]'+repr(line) )
                 sharedstate['failed'] = True
                 # we could break now

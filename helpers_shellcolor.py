@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 """
 Eases production of colors in the terminal,
   and only doing so when it is capable of showing it.
