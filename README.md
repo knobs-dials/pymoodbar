@@ -9,7 +9,7 @@ Partly for exerise,
  partly because I wanted images with more spectral detail, and maybe later things like beat and rhythm,
  partly because the original was annoying to get to compile, and partly because I wanted to see how useful it might be as a fingerprint or comparison sort of thing.
 
-So if you want a fast drop-in for moodbar generation, you probably want one the links below and not this one.
+So if you want a drop-in that is fast, or generates the .mood files the same way, you probably do NOT want this one.
 
 
 ## Dependencies
@@ -29,8 +29,6 @@ Currently
   - and a PNG that is a Bark-style spectrogram, colored by the .mood colors. A few examples of those:
 
 ![A few examples: lofi, reggae, rock, calm electro, crust, indie band, ethereal/vocal](screenshots/examples.png?raw=true)
-
-
 
 
 ## Further experiments
@@ -54,6 +52,7 @@ Ideas like that...
     - https://github.com/spezifisch/pymoodbar (py wrapper around the analysis part in C?)
     - https://github.com/globeone/moodbar  (drop-in command, C?)
     - https://github.com/exaile/moodbar  (drop-in command, C?)
+
 
 ## See also 
 - G Wood, S O'Keefe (2005), "[On Techniques for Content-Based Visual Annotation to Aid Intra-Track Music Navigation](https://www.google.com/search?q=On%20Techniques%20for%20Content-Based%20Visual%20Annotation%20to%20Aid%20Intra-Track%20Music%20Navigation%20pdf)"
