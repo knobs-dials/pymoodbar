@@ -2,12 +2,6 @@
 
 Python (numpy, scipy) implementation of moodbar, plus some experiments, in particular trying for a little more detail:
 
-Generates 
-- the classic RGB-per-1000th-song .mood file
-- and a PNG that is a Bark-style spectrogram, colored by the .mood colors. A few examples of those:
-
-![A few examples: lofi, reggae, rock, calm electro, crust, indie band, ethereal/vocal](screenshots/examples.png?raw=true)
-
 
 ## Why?
 Partly for exerise,
@@ -18,20 +12,24 @@ Partly for exerise,
 So if you want a fast drop-in for moodbar generation, you probably want one the links below and not this one.
 
 
-## Parts
+## Dependencies
+* numpy, scipy
+* PIL (for mood-to-image code)
+* ffmpeg/avconv being in the PATH, currently on linux
 
+
+### Moodbar-generate
 Currently 
 - runs ffmpeg/avconv in a subprocess and asks it for a mono PCM stream,
 - does some FFTs, windowing, 
 - applies equal-loudness curve, 
 - sorts energy into Bark-style critical bands.
+- Generates 
+  - the classic RGB-per-1000th-song .mood file
+  - and a PNG that is a Bark-style spectrogram, colored by the .mood colors. A few examples of those:
 
+![A few examples: lofi, reggae, rock, calm electro, crust, indie band, ethereal/vocal](screenshots/examples.png?raw=true)
 
-
-## Dependencies
-* numpy, scipy
-* PIL (for mood-to-image code)
-* ffmpeg/avconv being in the PATH, currently on linux
 
 
 
