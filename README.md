@@ -7,10 +7,9 @@ First version, treat with care.
 
 In general, if you want a drop-in that is fast, or generates the .mood files the same way, you probably do NOT want this one.
 
-...because I made this partly for exerise,
- partly because I wanted an easier testbed to experiment with various transforms (like critical bands and equal loudness),
- partly because I wanted images with more spectral detail, and maybe later things like beat and rhythm,
- partly because the original was annoying to get to compile, and partly because I wanted to see how useful it might be as a fingerprint or comparison sort of thing.
+...because I made this partly for exerise, and as a testbed to play with some critical bands and equal loudness stuff, and wanted to try images with more spectral detail, and maybe later things like beat and rhythm, and wanted to see how useful it might be as a fingerprint or comparison sort of thing.
+
+Also because the original was annoying to get to compile.
 
 
 
