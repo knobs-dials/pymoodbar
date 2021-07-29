@@ -1,15 +1,16 @@
 # pymoodbar
 
-Python (numpy, scipy) implementation of moodbar, plus some experiments, in particular trying for a little more detail:
+Python (numpy, scipy) implementation of moodbar (see the paper mentioned below for the concept), plus some experiments, in particular trying for a little more detail:
+
+First version, treat with care.
 
 
-## Why?
-Partly for exerise,
- partly because I wanted an easier testbed to experiment with various transforms (like critical bands and equal loudness),
- partly because I wanted images with more spectral detail, and maybe later things like beat and rhythm,
- partly because the original was annoying to get to compile, and partly because I wanted to see how useful it might be as a fingerprint or comparison sort of thing.
+In general, if you want a drop-in that is fast, or generates the .mood files the same way, you probably do NOT want this one.
 
-So if you want a drop-in that is fast, or generates the .mood files the same way, you probably do NOT want this one.
+...because I made this partly for exerise, and as a testbed to play with some critical bands and equal loudness stuff, and wanted to try images with more spectral detail, and maybe later things like beat and rhythm, and wanted to see how useful it might be as a fingerprint or comparison sort of thing.
+
+Also because the original was annoying to get to compile.
+
 
 
 ## Dependencies
@@ -46,16 +47,16 @@ Options:
   -r, --recursive       Recurse directories. Default is to only work on
                         specified file(s). Most options apply only in
                         combination with -r.
-  --no-remove           Don't remove apparently lone moods
-  --force-remove        If the remove step thinks it might throw away too much
-                        and you think it's okay, force it with this.
-  --no-generate         Only report what we would change, but don't do it.
-  --force-redo          Generate even if one exists already
-  --redo-age=REDO_AGE   Generate if older than this amount of days
-  --shuffle             Shuffle jobs (makes ETA a little more accurate because
-                        of mixed sizes)
-  --smallest-first      Do smallest files first
-  --largest-first       Do largest files first
+  --no-remove           Don't remove .mood files without according media file
+  --force-remove        If the remove step thinks it might throw away too
+                        much, and you think it's okay, force it with this.
+  --no-generate         Only report what we would generate, but don't do it.
+  --force-redo          Generate even if one exists already (probably avoid
+                        combining with -r unless you mean it)
+  --redo-age=REDO_AGE   Generate if older than this amount of days (used for
+                        debugging)
+  --shuffle             Shuffle generation jobs (makes ETA a little more
+                        accurate because of mixed sizes)
   -z PARALLEL, --parallel=PARALLEL
                         How many processes to run in parallel. Defaults is
                         detecting number of cores.
