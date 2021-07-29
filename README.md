@@ -48,6 +48,8 @@ Based on the ideas that...
 
 
 ## TODO:
+- check that the FFT sound code actually makes sense
+- do STFT with overlapping windows
 - Look at further optimizations for the analysis, it still takes a few seconds per song
 - look at using PyDub (or similar) instead of my own ffmpeg wrapper
 - look at
