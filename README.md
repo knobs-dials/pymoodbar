@@ -2,7 +2,7 @@
 
 Python (numpy, scipy) implementation of moodbar, plus some experiments, in particular trying for a little more detail:
 
-![A few examples: lofi, reggae, rock, calm electro, crust, indie band, ethereal/vocal](examples.png?raw=true)
+![A few examples: lofi, reggae, rock, calm electro, crust, indie band, ethereal/vocal](screenshots/examples.png?raw=true)
 
 
 ## Why?
@@ -32,7 +32,10 @@ Calculates the classic RGB-per-1000th-song .mood file, but also a PNG that is a 
 ## Further experiments
  
 - moodbar-text - shell output, with or without fancy unicode graph stuff. Because why not?
-![text-mode output](textmood.png?raw=true) 
+![text-mode output](screenshots/textmood.png?raw=true) 
+or with more colors:
+![text-mode output](screenshots/textmood_tc.png?raw=true) 
+
 
 
 - moodbar-correlate - ideas like that...
