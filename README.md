@@ -2,6 +2,10 @@
 
 Python (numpy, scipy) implementation of moodbar, plus some experiments, in particular trying for a little more detail:
 
+Generates 
+- the classic RGB-per-1000th-song .mood file
+- and a PNG that is a Bark-style spectrogram, colored by the .mood colors, which looks like:
+
 ![A few examples: lofi, reggae, rock, calm electro, crust, indie band, ethereal/vocal](screenshots/examples.png?raw=true)
 
 
@@ -22,9 +26,6 @@ Currently
 - applies equal-loudness curve, 
 - sorts energy into Bark-style critical bands.
 
-Generates 
-- the classic RGB-per-1000th-song .mood file
-- and a PNG that is a Bark-style spectrogram, colored by the .mood colors
 
 
 ## Dependencies
