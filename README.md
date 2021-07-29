@@ -18,8 +18,9 @@ So if you want a drop-in that is fast, or generates the .mood files the same way
 * ffmpeg/avconv being in the PATH, currently on linux
 
 
+## Main part
+
 ### Moodbar-generate
-Currently 
 - runs ffmpeg/avconv in a subprocess and asks it for a mono PCM stream,
 - does some FFTs, windowing, 
 - applies equal-loudness curve, 
@@ -36,12 +37,13 @@ Currently
 ### moodbar-text 
 
 Shell output, with fancy unicode graph stuff and truecolor (`-t`, it'll be 8-color and ugly without). Because why not?
-![text-mode output](screenshots/textmood_tc.png?raw=true) 
+![text-mode output, unsorted selection of songs](screenshots/textmood_tc.png?raw=true) 
+
 
 ### moodbar-correlate 
 
-Ideas like that...
-- you can probably find duplicates (moodbar already makes it easier to inspect suspected duplicates)
+Based on the ideas that...
+- you can probably find duplicates   (moodbar images already makes it easier to visually inspect suspected duplicates)
 - given some options, you can try to avoid harsh genre changes based on similar high/low distribution
 
 
