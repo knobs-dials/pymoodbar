@@ -443,7 +443,7 @@ def make_mood(mediafilename):
 def read_mood(filename):
     ''' Reads a .mood file into one flat array, which will probably be 3000 items long '''
     stob = os.stat(filename)
-    f = open(filename)
+    f = open(filename,'rb')
     data = f.read()
     data = array.array('B',data).tolist()
     f.close()
@@ -463,14 +463,14 @@ def mood_image(filename, height=20, width=None):
     from PIL import Image, ImageFilter
     data = read_mood(filename)
     oo256 = 1./256.
-    numsamples = len(data)/3
+    numsamples = int(len(data)/3)
     img = Image.new('RGB',(numsamples,1) )
     for i in range(0,len(data),3):
         r,g,b = data[i:i+3]
         r = int( ((r*oo256)**0.57)*255 )
         g = int( ((g*oo256)**1.2)*255 )
         b = int( ((b*oo256)**1.2)*255 )
-        img.putpixel( (i/3,0), (r,g,b)  )
+        img.putpixel( (int(i/3),0), (r,g,b)  )
     newsize = list(img.size)
     if height:
         newsize[1]=height

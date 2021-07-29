@@ -211,7 +211,7 @@ if __name__ == '__main__':
                 ffn, moodffn, size = tup
                 #print '= %s ='%ffn
                 #p = subprocess.Popen(['/usr/bin/moodbar','-o',moodffn, ffn ])  # the original
-                cmd = ['moodbar-generate' ]
+                cmd = [ 'moodbar-generate' ]
                 cmd.append(ffn)
                 p = subprocess.Popen(cmd)
                 out, err = p.communicate()
