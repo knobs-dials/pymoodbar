@@ -16,8 +16,11 @@ So if you want drop-ins for moodbar generation, you probably want one the links 
 
 ## Parts
 
-Currently runs ffmpeg/avconv in a subprocess and asks it for a mono PCM stream,
-does some FFTs, windowing, applies equal-loudness curve, sorts energy into Bark-style critical bands.
+Currently 
+- runs ffmpeg/avconv in a subprocess and asks it for a mono PCM stream,
+- does some FFTs, windowing, 
+- applies equal-loudness curve, 
+- sorts energy into Bark-style critical bands.
 
 Calculates the classic RGB-per-1000th-song .mood file, but also a PNG that is a Bark-style spectrogram colored by the .mood colors.
 
