@@ -31,8 +31,10 @@ So if you want a drop-in that is fast, or generates the .mood files the same way
 
 By default it assumes the parameters are filenames (I think I did this to act as a drop-in).
 
-If you want to recurse into directories, use -r.
-It will then first do a scan for which .mood files can be removed, and which need to be generated. This treewalk will make it slowish to start.
+If you want to recurse into directories, use -r. 
+
+Keep in mind it will then first do a scan for which .mood files can be removed, and which need to be generated.
+This treewalk will make it slowish to start.
 
 For futher arguments:
 

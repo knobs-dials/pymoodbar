@@ -17,11 +17,7 @@ import helpers_moodbar
 import helpers_progressbar
 import helpers_exec
 
-
 VERBOSE = False
-
-
-
 
 def fn_parts(pathstr):
     """ For a given path, returns a dict with
@@ -55,12 +51,9 @@ def proctitle(s):
         setproctitle.setproctitle( s )
     except ImportError:
         pass
-    
 
     
 def single(ffn, force_redo=False):
-    #proctitle( 'moodbar-generate [%s]'%(os.path.basename(ffn))
-
     fnp = fn_parts(ffn)
     fpextless = fnp['fullpathnoext']
     fp_png  = fpextless+'.mood.png'
@@ -99,33 +92,24 @@ def single(ffn, force_redo=False):
 
         
 if __name__ == '__main__':
-    os.nice(19) # mostly to inherit
+    os.nice(19) # try to be background
     
-
     p = optparse.OptionParser()
-
     p.add_option('-r', "--recursive",   dest="recursive",   default=False, action="store_true", help="Recurse directories. Default is to only work on specified file(s). Most options apply only in combination with -r.")
     
-    p.add_option("--no-remove",   dest="noremove",   default=False, action="store_true", help="Don't remove apparently lone moods")
-    p.add_option("--force-remove", dest="forceremove", default=False, action="store_true", help="If the remove step thinks it might throw away too much and you think it's okay, force it with this.")
+    p.add_option("--no-remove",   dest="noremove",   default=False, action="store_true", help="Don't remove .mood files without according media file")
+    p.add_option("--force-remove", dest="forceremove", default=False, action="store_true", help="If the remove step thinks it might throw away too much, and you think it's okay, force it with this.")
 
-    p.add_option("--no-generate", dest="nogenerate", default=False, action="store_true", help="Only report what we would change, but don't do it.")
-
-    p.add_option("--force-redo",  dest="redo", default=False, action="store_true", help="Generate even if one exists already")
-    p.add_option("--redo-age",    dest="redo_age", default=None, action="store", help="Generate if older than this amount of days")
-    
+    p.add_option("--no-generate", dest="nogenerate", default=False, action="store_true", help="Only report what we would generate, but don't do it.")
     #p.add_option("--no-png", dest="nopng", default=False, action="store_true", help="Don't generate the fancier png (e.g. when you won't use it anyway)")
+    p.add_option("--force-redo",  dest="redo", default=False, action="store_true", help="Generate even if one exists already (probably avoid combining with -r unless you mean it)")
+    p.add_option("--redo-age",    dest="redo_age", default=None, action="store", help="Generate if older than this amount of days (used for debugging)")
 
     p.add_option("--shuffle",  dest="shuffle", default=False, action="store_true",
-                     help="Shuffle jobs (makes ETA a little more accurate because of mixed sizes)")
-    p.add_option("--smallest-first",  dest="smallest", default=False, action="store_true",
-                     help="Do smallest files first")
-    p.add_option("--largest-first",  dest="largest", default=False, action="store_true",
-                     help="Do largest files first")
+                     help="Shuffle generation jobs (makes ETA a little more accurate because of mixed sizes)")
 
     p.add_option('-z', "--parallel",  dest="parallel", default=None, action="store",
                      help="How many processes to run in parallel. Defaults is detecting number of cores.")
-    
     p.add_option("-n", "--dry-run",  dest="dryrun",  default=False, action="store_true", help="Say what we would generate/remove, don't actually do it.")
     p.add_option("-v", "--verbose",  dest="verbose",  default=False, action="store_true", help="Print more individual things.")
     options, args = p.parse_args()  
@@ -134,14 +118,12 @@ if __name__ == '__main__':
         redo_age_day = float(options.redo_age)
         redo_age_sec = 60*60*24*redo_age_day
         
-    if not options.recursive: # work on given file arguments, probably a subprocess from our -r self
-        
+    if not options.recursive: # work on given file arguments (this may well be a  a subprocess from our -r parent)
         for fn in args:
-            os.path.basename(sys.argv[0]) +' '+ ' '.join(os.path.basename(fn)  for fn in sys.argv[1:])            
             ffn = os.path.abspath(fn)
             if os.path.isfile(ffn):
-                # CONSIDER: pool this one too (for when other things call this without parallelizing). Right now it's unconditional.
-                single(ffn, force_redo=1)
+                # CONSIDER: pool this one too (for when other things call this without parallelizing).
+                single(ffn, force_redo=options.redo)
                 
     else: # scan directories, run copies of ourself without -r
         proctitle( 'moodbar-generate;scan' )
@@ -264,11 +246,7 @@ if __name__ == '__main__':
             if options.dryrun:
                 print( "(DRY RUN):  Have %d to generate,  %d exist already"%(len(todo), skip)         )   
             else:
-                if options.smallest:
-                    todo.sort(lambda a,b: cmp(a[2],b[2]))
-                elif options.largest:
-                    todo.sort(lambda a,b: cmp(b[2],a[2]))
-                elif options.shuffle:
+                if options.shuffle:
                     random.shuffle(todo)
 
                 print( "Doing %d now,  skipping %d that already exist"%(len(todo), skip))
