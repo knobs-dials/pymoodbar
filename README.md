@@ -47,16 +47,16 @@ Options:
   -r, --recursive       Recurse directories. Default is to only work on
                         specified file(s). Most options apply only in
                         combination with -r.
-  --no-remove           Don't remove apparently lone moods
-  --force-remove        If the remove step thinks it might throw away too much
-                        and you think it's okay, force it with this.
-  --no-generate         Only report what we would change, but don't do it.
-  --force-redo          Generate even if one exists already
-  --redo-age=REDO_AGE   Generate if older than this amount of days
-  --shuffle             Shuffle jobs (makes ETA a little more accurate because
-                        of mixed sizes)
-  --smallest-first      Do smallest files first
-  --largest-first       Do largest files first
+  --no-remove           Don't remove .mood files without according media file
+  --force-remove        If the remove step thinks it might throw away too
+                        much, and you think it's okay, force it with this.
+  --no-generate         Only report what we would generate, but don't do it.
+  --force-redo          Generate even if one exists already (probably avoid
+                        combining with -r unless you mean it)
+  --redo-age=REDO_AGE   Generate if older than this amount of days (used for
+                        debugging)
+  --shuffle             Shuffle generation jobs (makes ETA a little more
+                        accurate because of mixed sizes)
   -z PARALLEL, --parallel=PARALLEL
                         How many processes to run in parallel. Defaults is
                         detecting number of cores.
