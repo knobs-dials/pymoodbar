@@ -2,6 +2,10 @@
 
 Python (numpy, scipy) implementation of moodbar, plus some experiments, in particular trying for a little more detail:
 
+Generates 
+- the classic RGB-per-1000th-song .mood file
+- and a PNG that is a Bark-style spectrogram, colored by the .mood colors. A few examples of those:
+
 ![A few examples: lofi, reggae, rock, calm electro, crust, indie band, ethereal/vocal](screenshots/examples.png?raw=true)
 
 
@@ -11,15 +15,17 @@ Partly for exerise,
  partly because I wanted images with more spectral detail, and maybe later things like beat and rhythm,
  partly because the original was annoying to get to compile, and partly because I wanted to see how useful it might be as a fingerprint or comparison sort of thing.
 
-So if you want drop-ins for moodbar generation, you probably want one the links below and not this one.
+So if you want a fast drop-in for moodbar generation, you probably want one the links below and not this one.
 
 
 ## Parts
 
-Currently runs ffmpeg/avconv in a subprocess and asks it for a mono PCM stream,
-does some FFTs, windowing, applies equal-loudness curve, sorts energy into Bark-style critical bands.
+Currently 
+- runs ffmpeg/avconv in a subprocess and asks it for a mono PCM stream,
+- does some FFTs, windowing, 
+- applies equal-loudness curve, 
+- sorts energy into Bark-style critical bands.
 
-Calculates the classic RGB-per-1000th-song .mood file, but also a PNG that is a Bark-style spectrogram colored by the .mood colors.
 
 
 ## Dependencies
@@ -31,11 +37,8 @@ Calculates the classic RGB-per-1000th-song .mood file, but also a PNG that is a 
 
 ## Further experiments
  
-- moodbar-text - shell output, with or without fancy unicode graph stuff. Because why not?
-![text-mode output](screenshots/textmood.png?raw=true) 
-or with more colors:
+- moodbar-text - shell output, with fancy unicode graph stuff and truecolor (`-t`, it'll be 8-color and ugly without). Because why not?
 ![text-mode output](screenshots/textmood_tc.png?raw=true) 
-
 
 
 - moodbar-correlate - ideas like that...
