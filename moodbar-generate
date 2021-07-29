@@ -1,0 +1,272 @@
+#!/usr/bin/python
+''' By default it runs on a single file - I think I did that to have it be a drop-in.
+    To run it on a bunch of files, use -r. 
+'''
+import os
+import sys
+import time
+import optparse
+import random
+import multiprocessing
+import subprocess
+
+import numpy
+from PIL import Image
+
+import helpers_path
+import helpers_string
+import helpers_moodbar
+import helpers_progressbar
+import helpers_exec
+
+
+VERBOSE = False
+
+def proctitle(s):
+    try:
+        import setproctitle
+        setproctitle.setproctitle( s )
+    except ImportError:
+        pass
+    
+
+    
+def single(ffn, force_redo=False):
+    #proctitle( 'moodbar-generate [%s]'%(os.path.basename(ffn))
+
+    fnp = helpers_path.fn_parts(ffn)
+    fpextless = fnp['fullpathnoext']
+    fp_png  = fpextless+'.mood.png'
+    fp_mood = fpextless+'.mood'
+
+    try:
+        if force_redo or (not (os.path.exists(fp_mood) and os.stat(fp_mood).st_size==3000)):
+            if VERBOSE:
+                print "Generating mood for %r"%arg
+            barkary, moodary = helpers_moodbar.make_mood(ffn)
+            if barkary is None: # make_mood decided nope.
+                print "Failed for %r"%ffn
+                return
+            
+            if VERBOSE:
+                print "Writing mood file to %r"%fp_mood
+            filebytes = moodary.tostring()
+            f = file(fp_mood,'wb')
+            f.write(filebytes)
+            f.close()
+
+            im = helpers_moodbar.fancy_image(barkary, moodary)
+            im.save(fp_png)
+
+        if not os.path.exists(fp_png):
+            if VERBOSE:
+                print "Writing thumbnail to %r"%fp_png
+            im = helpers_moodbar.mood_image(fp_mood)
+            im.save(fp_png)
+    except Exception, e:
+        raise
+        print
+        print "%r"%ffn
+        print helpers_string.wrap_indent( str(e) )
+        
+
+        
+if __name__ == '__main__':
+    os.nice(19) # mostly to inherit
+    
+
+    p = optparse.OptionParser()
+
+    p.add_option('-r', "--recursive",   dest="recursive",   default=False, action="store_true", help="Recurse directories. Default is to only work on specified file(s). Most options apply only in combination with -r.")
+    
+    p.add_option("--no-remove",   dest="noremove",   default=False, action="store_true", help="Don't remove apparently lone moods")
+    p.add_option("--force-remove", dest="forceremove", default=False, action="store_true", help="If the remove step thinks it might throw away too much and you think it's okay, force it with this.")
+
+    p.add_option("--no-generate", dest="nogenerate", default=False, action="store_true", help="Only report what we would change, but don't do it.")
+
+    p.add_option("--force-redo",  dest="redo", default=False, action="store_true", help="Generate even if one exists already")
+    p.add_option("--redo-age",    dest="redo_age", default=None, action="store", help="Generate if older than this amount of days")
+    
+    #p.add_option("--no-png", dest="nopng", default=False, action="store_true", help="Don't generate the fancier png (e.g. when you won't use it anyway)")
+
+    p.add_option("--shuffle",  dest="shuffle", default=False, action="store_true",
+                     help="Shuffle jobs (makes ETA a little more accurate because of mixed sizes)")
+    p.add_option("--smallest-first",  dest="smallest", default=False, action="store_true",
+                     help="Do smallest files first")
+    p.add_option("--largest-first",  dest="largest", default=False, action="store_true",
+                     help="Do largest files first")
+
+    p.add_option('-z', "--parallel",  dest="parallel", default=None, action="store",
+                     help="How many processes to run in parallel. Defaults is detecting number of cores.")
+    
+    p.add_option("-n", "--dry-run",  dest="dryrun",  default=False, action="store_true", help="Say what we would generate/remove, don't actually do it.")
+    p.add_option("-v", "--verbose",  dest="verbose",  default=False, action="store_true", help="Print more individual things.")
+    options, args = p.parse_args()  
+
+    if options.redo_age!=None:
+        redo_age_day = float(options.redo_age)
+        redo_age_sec = 60*60*24*redo_age_day
+        
+    if not options.recursive: # work on given file arguments, probably a subprocess from our -r self
+        
+        for fn in args:
+            os.path.basename(sys.argv[0]) +' '+ ' '.join(os.path.basename(fn)  for fn in sys.argv[1:])            
+            ffn = os.path.abspath(fn)
+            if os.path.isfile(ffn):
+                # CONSIDER: pool this one too (for when other things call this without parallelizing). Right now it's unconditional.
+                single(ffn, force_redo=1)
+                
+    else: # scan directories, run copies of ourself without -r
+        proctitle( 'moodbar-generate;scan' )
+        
+        ### Remove phase ###################
+        if not options.noremove:
+            #proctitle( 'moodbar-generate [scanning to remove]' )
+            deleteme = set()
+            nkeeps, ndeletes=0,0
+            print "Scanning to remove lone .mood and .mood.png files..."
+            for dirname in args:
+                dirname = os.path.abspath(dirname)
+                for d,ed,ef in os.walk( dirname ):
+                    #if options.verbose:
+                    #    print '  ',d
+                    # Look for non-moods to match with
+                    non_moods = {}  # Implied because local: Just within the same directory
+                    for filename in ef:
+                        fnp = helpers_path.fn_parts(filename)
+                        if fnp['ext'] in ('mood', ):
+                            continue 
+                        non_moods[ fnp['noext'] ] = filename
+                    # Look for moods, match with above 
+                    for filename in ef:
+                        ffn = os.path.join(d, filename)
+                        if filename.endswith('.mood'):
+                            lookfor = filename[:-5]
+                        elif filename.endswith('.mood.png'):
+                            lookfor = filename[:-9]
+                        else:
+                            continue # don't even consider deleting anything else
+                        if lookfor in non_moods: # there's a non-.mood file that seems to go along
+                            if options.verbose:
+                                pass
+                                #print "keep: %r seems to go with %r"%(filename,non_moods[lookfor])
+                            nkeeps   += 1
+                        else:
+                            ndeletes += 1
+                            deleteme.add( ffn )
+            # only delete if it passes sanity check, or forced
+            #proctitle( 'moodbar-generate [removing]' )
+            print "Deciding..."
+            if options.dryrun:
+                print "(DRY RUN) would",
+            print "keep:%d  delete:%d"%(nkeeps,ndeletes)
+            if (ndeletes>nkeeps or ndeletes>1000) and not options.forceremove:
+                print "This seems like a very high number of deletes, not actually considering it (you can --force-remove if you are sure)"
+            else:                
+                for ffn in sorted(deleteme):
+                    if options.dryrun:                    
+                        if options.verbose:
+                            print 'would delete: %r'%ffn
+                    else:
+                        if options.verbose:                    
+                            print "deleting %r"%ffn
+                        os.unlink(ffn)
+            print
+        
+        
+        ### Generate phase ###################
+        if not options.nogenerate:
+            #proctitle( 'moodbar-generate [scanning to generate]' )
+            print "Scanning to generate .mood and .mood.png files..."
+            def workfunc(tup):
+                ffn, moodffn, size = tup
+                #print '= %s ='%ffn
+                #p = subprocess.Popen(['/usr/bin/moodbar','-o',moodffn, ffn ])  # the original
+                cmd = ['moodbar-generate' ]
+                cmd.append(ffn)
+                p = subprocess.Popen(cmd)
+                out, err = p.communicate()
+            todo = [] # (ffn, moodffn, size) tuples (size for ordering jobs only)
+            skip = 0
+            for dirname in args:
+                dirname = os.path.abspath(dirname)
+                for r, ds, fs in os.walk(dirname):
+                    for fn in fs:
+                        ffn = os.path.join(r, fn)
+
+                        fnp = helpers_path.fn_parts(ffn)
+                        #print fnp
+                        ext = fnp['ext']
+                        if ext == None or ext.lower() not in ('mp3','ogg',
+                                                              'ogv','avi','mkv','mpg','mov','mp4','m4v','m4a','aac',
+                                                              'mod','st','s3m','xm','it','669,'
+                                                             ):
+                            continue
+
+                        fpextless = fnp['fullpathnoext']
+                        moodffn  = os.path.join( fpextless+'.mood' )
+                            
+                        if not os.path.exists( moodffn ):
+                            print "TODO (missing): %r"%ffn
+                            todo.append( (ffn, moodffn, os.stat(ffn).st_size ) )
+                        else: # mood exists
+                            moodstob = os.stat(moodffn)
+                            
+                            if options.redo: #force?
+                                todo.append( (ffn, moodffn, os.stat(ffn).st_size ) )
+                                
+                            elif options.redo_age!=None: # old?
+                                age_sec = time.time() - moodstob.st_mtime
+                                age_day = 60*60*24*age_sec
+                                #print 'redo days:%d redo secs:%d   file age:%d'%( redo_age_day, redo_age_sec, age_sec, )
+                                
+                                if (age_sec > redo_age_sec):
+                                    print "TODO (mood exists but %d days old): %r"%(age_sec/(60*60*24), ffn)
+                                    todo.append( (ffn, moodffn, os.stat(ffn).st_size) )
+                                else:
+                                    #print "Skip %r, new: %r"%(ffn, moodffn)
+                                    skip+=1
+                                    continue
+
+                            #don't force, not old, just skip
+                            #print "Skip %r, %r exists"%(ffn, moodffn)
+                            skip+=1
+
+            proctitle( 'moodbar-generate [generating]' )
+
+            if options.dryrun:
+                print "(DRY RUN):  Have %d to generate,  %d exist already"%(len(todo), skip)            
+            else:
+                if options.smallest:
+                    todo.sort(lambda a,b: cmp(a[2],b[2]))
+                elif options.largest:
+                    todo.sort(lambda a,b: cmp(b[2],a[2]))
+                elif options.shuffle:
+                    random.shuffle(todo)
+
+                print "Doing %d now,  skipping %d that already exist"%(len(todo), skip)
+
+                procs = None
+                try:
+                    procs = int(options.parallel)
+                except:
+                    pass
+                if procs==None:
+                    procs = helpers_exec.num_cpus(fallback=3)+2
+
+                mypool = multiprocessing.Pool(procs)
+                pb = helpers_progressbar.ProgressBar( len(todo)) #, style=helpers_progressbar.style_vertical )
+                pb.start()
+                pb.simple(forcedraw=True)
+                for ignore in mypool.imap_unordered(workfunc, todo):
+                    pass
+                    pb.increment()
+                    pb.simple()
+                mypool.close()
+                mypool.join()
+                pb.simple( forcedraw=True )
+
+                print
+                print "DONE"
+                print
+
