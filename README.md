@@ -4,7 +4,7 @@ Python (numpy, scipy) implementation of moodbar, plus some experiments, in parti
 
 Generates 
 - the classic RGB-per-1000th-song .mood file
-- and a PNG that is a Bark-style spectrogram, colored by the .mood colors, which looks like:
+- and a PNG that is a Bark-style spectrogram, colored by the .mood colors. A few examples of those:
 
 ![A few examples: lofi, reggae, rock, calm electro, crust, indie band, ethereal/vocal](screenshots/examples.png?raw=true)
 
