@@ -31,9 +31,7 @@ Calculates the classic RGB-per-1000th-song .mood file, but also a PNG that is a 
 
 ## Further experiments
  
-- moodbar-text - shell output, with or without fancy unicode graph stuff. Because why not?
-![text-mode output](screenshots/textmood.png?raw=true) 
-or with more colors:
+- moodbar-text - shell output, fancy unicode graph stuff and truecolor. Because why not?
 ![text-mode output](screenshots/textmood_tc.png?raw=true) 
 
 
