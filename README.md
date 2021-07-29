@@ -1,6 +1,6 @@
 # pymoodbar
 
-Python (numpy, scipy) implementation of moodbar, plus some experiments.
+Python (numpy, scipy) implementation of moodbar, plus some experiments, in particular trying for a little more detail:
 
 ![A few examples: lofi, reggae, rock, calm electro, crust, indie band, ethereal/vocal](examples.png?raw=true)
 
@@ -35,7 +35,7 @@ Calculates the classic RGB-per-1000th-song .mood file, but also a PNG that is a 
 ![text-mode output](textmood.png?raw=true) 
 
 
-- moodbar-correlate - ideas like that
+- moodbar-correlate - ideas like that...
      - you can probably find duplicates (moodbar already makes it easier to inspect suspected duplicates)
      - given some options, you can try to avoid harsh genre changes based on similar high/low distribution
 
