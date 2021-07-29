@@ -37,13 +37,16 @@ Currently
 
 ## Further experiments
  
-- moodbar-text - shell output, with fancy unicode graph stuff and truecolor (`-t`, it'll be 8-color and ugly without). Because why not?
+### moodbar-text 
+
+Shell output, with fancy unicode graph stuff and truecolor (`-t`, it'll be 8-color and ugly without). Because why not?
 ![text-mode output](screenshots/textmood_tc.png?raw=true) 
 
+### moodbar-correlate 
 
-- moodbar-correlate - ideas like that...
-     - you can probably find duplicates (moodbar already makes it easier to inspect suspected duplicates)
-     - given some options, you can try to avoid harsh genre changes based on similar high/low distribution
+Ideas like that...
+- you can probably find duplicates (moodbar already makes it easier to inspect suspected duplicates)
+- given some options, you can try to avoid harsh genre changes based on similar high/low distribution
 
 
 ## TODO:
