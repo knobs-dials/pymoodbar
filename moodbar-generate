@@ -13,13 +13,41 @@ import subprocess
 import numpy
 from PIL import Image
 
-import helpers_path
 import helpers_moodbar
 import helpers_progressbar
 import helpers_exec
 
 
 VERBOSE = False
+
+
+
+
+def fn_parts(pathstr):
+    """ For a given path, returns a dict with
+        dirname, basename, basename without extension, extension
+
+        for extensions, we split only on the last dot.
+ 
+        For example: 
+'/q/a.b/base.xml' --> {'ext': 'xml',  'base': 'base.xml',  'noext': 'base',  'dir': '/q/a.b',  fullpathnoext: '/q/a.b/base'}
+           'aa.b' --> {'ext': 'b',    'base': 'aa.b',      'noext': 'aa',    'dir': '',        fullpathnoext: 'aa'}
+           'bare' --> {'ext': None,   'base': 'bare',      'noext': 'bare',  'dir': '',        fullpathnoext: 'bare'}
+
+         Note that 'ext':None  (it's most ly there to make fn_fromparts easier)
+    """
+    dirn   = os.path.dirname(pathstr)
+    basen  = os.path.basename(pathstr)
+    dotinbase = basen.rfind('.')
+    if dotinbase==-1:
+        noext=basen
+        ext=None
+    else:
+        noext = basen[:dotinbase]
+        ext   = basen[dotinbase+1:]
+    return {'dir':dirn, 'base':basen , 'noext':noext , 'ext':ext, 'fullpathnoext':os.path.join(dirn,noext) }
+
+
 
 def proctitle(s):
     try:
@@ -33,7 +61,7 @@ def proctitle(s):
 def single(ffn, force_redo=False):
     #proctitle( 'moodbar-generate [%s]'%(os.path.basename(ffn))
 
-    fnp = helpers_path.fn_parts(ffn)
+    fnp = fn_parts(ffn)
     fpextless = fnp['fullpathnoext']
     fp_png  = fpextless+'.mood.png'
     fp_mood = fpextless+'.mood'
@@ -132,7 +160,7 @@ if __name__ == '__main__':
                     # Look for non-moods to match with
                     non_moods = {}  # Implied because local: Just within the same directory
                     for filename in ef:
-                        fnp = helpers_path.fn_parts(filename)
+                        fnp = fn_parts(filename)
                         if fnp['ext'] in ('mood', ):
                             continue 
                         non_moods[ fnp['noext'] ] = filename
