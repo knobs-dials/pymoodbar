@@ -15,11 +15,9 @@ import helpers_ffmpeg
 
     I may implement it in something more portable once I'm satisfied. I may be too lazy.
 
-
     Mono 16-bit is hardcoded in places.  Sample rate could be more easily changed.
 
     Two-process and takes more than one core, but less than two fully because ffmpeg is held up by our calculations.
-
 
     TODO: 
     - see if pydub makes everything better. Which is also using ffmpeg, but very likely more mature than my code.
@@ -29,16 +27,13 @@ import helpers_ffmpeg
     CONSIDER: use a power-of-two sample rate, for FFT speed, if ffmpeg allows it.
 '''
 
-
-
 ### dB(B) coorection  (specifically that bcause meant for intermediate loudness.  Sure it's not really for music, but easy)
 _dbb_lut_db = [] # index is hz, elements are dB
 _dbb_lut_f  = [] # index is hz, elements are factor
 
 def _dbb_genlut(uptohz=22050):
     ''' Returns dB adjustment according to dB(B) filter at a given (integer) frequency
-        (returned values max out at about -0.20dB)
-    '''
+        (returned values max out at about -0.20dB)   '''
     _dbb_lut_db.append( 0 ) # 0 for 0Hz (DC)
     _dbb_lut_f.append( 0 )
     for hz in range(1,uptohz+1):
@@ -48,7 +43,6 @@ def _dbb_genlut(uptohz=22050):
         b = 424.36       # 20.6**2
         c = 25122.25     # 158.5**2
         Rb= (a * f3 )/( (f2+b)*(f2+a)*math.sqrt(f2+c) )
-        
         db_adjust   = 0.17 + 20.*math.log(Rb)
         factor_adjust = 10.**(0.05*db_adjust)
         _dbb_lut_db.append( db_adjust )
@@ -69,9 +63,6 @@ def dbb_factor(hz):
     return _dbb_lut_f[hz]
 
 
-
-
-
 ### Frequency-to-bark,   to accumulate per bark band
 # The usual implementation is just a few explicit thresholds.
 # This lookup table is lazy and overkill, but was handy while comparing critical band functions...
@@ -84,8 +75,7 @@ def _bark_genlut(uptohz=22050):
 def bark_traunmuller(hz, mn=0, mx=23):
     ''' Critical band rate (Hz->Bark), according to Traunmuller 1990.
         The result is truncated to 0..23 (inclusive) by default
-        in part because the formula itself returns <0 for <40Hz, 
-    '''
+        in part because the formula itself returns <0 for <40Hz,   '''
     v = (26.81*float(hz))/(1960.+float(hz)) - 0.53
     v = max(v, mn)
     v = min(v, mx)
@@ -96,7 +86,6 @@ def bark(hz):
         _bark_genlut()
     hz = int(hz)
     return _bark_lut[hz]
-
 
 
 
@@ -128,29 +117,23 @@ def covering_windows(ary,  window_size,  min_overlap):
                4096 with window_size 512 and min_overlap 128 is 11 steps of size 358.4 (153.6 overlap)
     '''
     w, = ary.shape
-    
     if w < window_size: # TODO: think about this more.
         yield ary
-    
     else:
         fmi = float(min_overlap)
         if fmi>0.0 and fmi<1.0:
             min_overlap = int(math.ceil(fmi*window_size))
             #print "min_overlap from float (%.3f * %d) means %d "%(fmi, window_size, min_overlap)
-        
         # brute force this, I'm too lazy to think about it right now - though I expect it's just a sub and div. Ahem :)
         wsteps = None
         for numsteps in range( int( max(2,w / window_size)), int(w/2) ): # sane limits
             st = numpy.linspace( window_size, w, numsteps )
-            #print window_size, w, numsteps, st
             stepsize = st[1]-st[0]
-            #print stepsize
             overlap = window_size-stepsize
             if overlap >= min_overlap:
                 #print "Dividing width %s into %d steps (stepsize is %.1f) gives %.1f overlap"%(w,numsteps,  stepsize,overlap)
                 wsteps = numsteps
                 break
-
         for xoff in numpy.linspace(0, w-window_size, wsteps):
             fromx = int(xoff)
             tox   = int(math.floor(fromx+window_size))
@@ -160,8 +143,6 @@ def covering_windows(ary,  window_size,  min_overlap):
 
 class DecodeError(Exception):
     pass
-
-
 
 ###
 _hcache = {}
@@ -175,7 +156,7 @@ def hanning(size):
         return ret
     
     
-def make_mood(mediafilename):
+def make_mood(mediafilename): # , debug=False
     '''Given a media filename (probably mp3, ogg, or such) 
 
        What it does:
@@ -198,13 +179,14 @@ def make_mood(mediafilename):
        - deal better with few-second files
     '''    
     sample_rate = 22050 
-    # TODO: figure out cost/benefit against FFT speed (Resampling to 22050 adds maybe 30% on top of decode calculations.)
+    # TODO: figure out cost/benefit against FFT speed  (resampling to 22050 adds maybe 30% on top of decode calculations.)
     # TODO: see if ffmpeg can output arbitrary sample rates
                                     
     estlength_sec = helpers_ffmpeg.get_length(mediafilename, decode=False)
     nsamples = estlength_sec * sample_rate
     # Note that since our use is just Bark bands, we can get away with 1024 or 2048
 
+    #fudge things for very short media
     if nsamples < 128000:    # ..5sec
         return None,None
         #overlapsize = 8
@@ -221,123 +203,83 @@ def make_mood(mediafilename):
     else: # most cases
         overlapsize = 64
         fftsize     = 1024
-    #print nsamples,fftsize,overlapsize
-    #    print "SKIP, too small (%s sec (%d samples) for %r)"%(estlength_sec, nsamples, mediafilename)
-    #    # See if we can just force fftsize smaller instead?
-    #    return None,None
-    bucketsize  = int( 1+fftsize/2 )
 
+    bucketsize  = int( 1+fftsize/2 )
     
     chunklen_samples = int( nsamples / 1000. )
-    # note: int will truncate so this will add up time-error-wise.
-    # right now I choose not to care, but I should rewrite the logic for this.
+    # note: int will truncate so this will add up time-error-wise. right now I choose not to care, but
+    # TODO: rewrite the logic to care.
 
-    #print 'Length estimate (ffprobe): ~%.3f seconds, ~%d samples'%( estlength_sec, nsamples )
-    #print "Which would be ~%d samples @ %dHz"%(estlength_sec * sample_rate, sample_rate)
-    #print "Each 1/1000-length chunk is ~%d samples"%(chunklen_samples)
+    #print( 'Length estimate (ffprobe): ~%.3f seconds, ~%d samples'%( estlength_sec, nsamples) )
+    #print( "Which would be ~%d samples @ %dHz"%(estlength_sec * sample_rate, sample_rate) )
+    #print( "Each 1/1000-length chunk is ~%d samples"%(chunklen_samples) )
 
     # our first goal is to sum into bark-bands per 1000th-length segment
     bark_ary = numpy.zeros( (24,1000), dtype=numpy.float32 ) 
     try:
-        chunksample_gen = helpers_ffmpeg.stream_audio(mediafilename, sample_rate, chunk_samples=chunklen_samples) # generator
+        chunksample_gen = helpers_ffmpeg.stream_audio(mediafilename, sample_rate, chunk_samples=chunklen_samples)  # generator
 
         samplepos = 0 # keep track of how much data we saw
         for i, chunksamples in enumerate(chunksample_gen):
-            
             if i==1000: # TODO: remove the need for this? (it's because we under-read a little, see chunklen_samples)
                 break
             if len(chunksamples)==0: # TODO: remove the need for this?
                 break
-            #print "chunk %s gets samples %d..%d (of %d)"%(i, samplepos, samplepos+len(chunksamples), nsamples,) # for debug of that time error
+            #print( "chunk %s gets samples %d..%d (of %d)"%(i, samplepos, samplepos+len(chunksamples), nsamples,) ) # for debug of that time error
             
             samplepos += chunksamples.shape[0]
 
-            if 0:
-                # show progress in song-time terms  (was also double-check with stdout entions)
-                at_seconds = float(samplepos) / sample_rate
-                sys.stdout.write( "at %dm%02ds (of ~%dm%02ds)  in %r\n"%(
-                    at_seconds/60, at_seconds%60,  estlength_sec/60, estlength_sec%60,
-                    os.path.basename(mediafilename)
-                    ))
-                sys.stdout.flush()
+            #at_seconds = float(samplepos) / sample_rate
+            #sys.stdout.write( "at %dm%02ds (of ~%dm%02ds)  in %r\n"%(  at_seconds/60, at_seconds%60,  estlength_sec/60, estlength_sec%60,    os.path.basename(mediafilename)   ))
+            #sys.stdout.flush()
             
             # constants given the above
             approx_width_hz = float( sample_rate/2. )/float( fftsize/2 )
             barkbuckets     = numpy.zeros(bucketsize, dtype=numpy.uint8)
             factoradjusts   = numpy.zeros(bucketsize, dtype=numpy.float32)
             for fi in range(bucketsize):
-                approx_center = (0.5+fi)*approx_width_hz  
+                approx_center     = (0.5+fi)*approx_width_hz  
                 barkbuckets[fi]   = bark(approx_center)
                 factoradjusts[fi] = dbb_factor( approx_center )
 
             for windowsamples in covering_windows(chunksamples, fftsize, overlapsize): 
                 #if len(windowsamples)==0: # TODO: remove the need. This shouldn't happen?
                 #    raise ValueError('bug in code, covering_windows outputted something %d long'%len(windowsamples))
-                
                 # TODO: pad if smaller because we baked in size assumptions - length of the last chunk will typically be shorter
-                
                 windowsamples *= hanning( len(windowsamples) )
-                
-                #print "chunk %d window %d: %d samples"%(i,wi, len(windowsamples))
+                #print( "chunk %d window %d: %d samples"%(i,wi, len(windowsamples)) )
                 ft = numpy.fft.rfft( windowsamples )
                 amp = numpy.abs( ft ) # amplitude spectrum
-
                 #pwr = amp**2  # PSD gives more contrasty spectrograms, but I like there being more to color.
-                amp /= fftsize # normalize 
-
-                # TODO: compare to decibel (via log)
-                
+                amp /= fftsize  # normalize
                 # reminder: bark_ary is a 24-by-1000-sized thing,
                 #           amp is 1+fftsize/2 sized to be mapped into 24 via barkbuckets,  and summed into bark_ary
                 #barkbuckets looks something like 0 0 0 0 0 1 1 1 1 2 2 2 2 3 3 3 3 3 4 4 4 4 4 5 5 5 5 5 6 6 6 6 6 6 6
                 #                                 7 7 7 7 7 7 8 8 8 8 8 8 8 8 9 9 9 9 9 9 9 9 9 etc
                 # so this, while not the most efficient, is understandable and brief
                 values, counts = numpy.unique(barkbuckets, return_counts=True)
-                for bbuck,cnt in zip(list(values),list(counts)):
-                    #print i,  windowsamples.shape
+                for bbuck,cnt in zip( list(values), list(counts) ):
                     try:
                         bark_ary[bbuck][i] = amp[barkbuckets==bbuck].sum()/cnt
                     except Exception as e:
                         pass
-                        #if i>900:
-                        #    break   
-                        #pass
-                        #print mediafilename
-                        #print e
-                        #sys.exit(0)
-                        
         for dump in chunksample_gen: # TODO: remove the need
             pass
             
-    except DecodeError:
+    except DecodeError: # ...this no longer looks right, TODO: look
         at_seconds = float(samplepos) / sample_rate
-        #print "Decode error at %dm%02ds (of %dm%02ds)"%(at_seconds/60, at_seconds%60,  estlength_sec/60, estlength_sec%60)
+        #print( "Decode error at %dm%02ds (of %dm%02ds)"%(at_seconds/60, at_seconds%60,  estlength_sec/60, estlength_sec%60) )
         diffsec = abs(at_seconds-estlength_sec)
         if diffsec > 3:
             print( "Decode before end, difference is %.2f seconds"%diffsec)
             raise
         else:
-            print("Decode error at end (%.1f sec difference to estimated length) - small difference, probably something like stray APEv2, fine."%diffsec)
+            print( "Decode error at end (%.1f sec difference to estimated length) - small difference, probably something like stray APEv2, fine."%diffsec )
 
     # CONSIDER: a fixed-dB range instead of either of these.    
-    if 0:
-        # normalize barks overall (it's basically a bark-style spectrogram)
-        hperc = numpy.percentile(bark_ary,90)    
-        bark_ary /= (hperc/255.)
-    elif 0:
-        # normalize per band. This is less valid, but more colorful.
-        for barkband in range(24):
-            hperc = numpy.percentile(bark_ary[barkband],97)
-            if hperc !=0:
-                bark_ary[barkband] /= (hperc/255.)
-    else:
-        pass
-        #bark_ary *= 2 # most things are not the loudest possible, soo this spreads the distribution to cover most of the ~255 scale
                 
     #import pandas, matplotlib.pyplot as plt
-    #df = pandas.DataFrame(data=bark_ary).T
-    #print df
-    #print df.describe()
+    #print( pandas.DataFrame(data=mood_ary).T.describe())
     #plt.imshow(bark_ary, cmap='gray', vmin=0, vmax=255)
     #plt.show()
     
@@ -347,97 +289,52 @@ def make_mood(mediafilename):
                    2.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,                  # mid (blue)
                    1.0,1.0,1.0,1.0,1.0,1.0,2.0,2.0,2.0,3.0,3.0,5.0)  # hi  (green)
     mood_ary = numpy.zeros( (3,1000), dtype=numpy.float32 )
-    mood_ary[0] += bark_ary[0]*colorweight[0]    #  ~50Hz
-    mood_ary[0] += bark_ary[1]*colorweight[1]    #  150
-    mood_ary[1] += bark_ary[2]*colorweight[2]    #  250 #bassy ends hereish
-    mood_ary[1] += bark_ary[3]*colorweight[3]    #  350
-    mood_ary[1] += bark_ary[4]*colorweight[4]    #  450
-    mood_ary[1] += bark_ary[5]*colorweight[5]    #  550
-    mood_ary[1] += bark_ary[6]*colorweight[6]    #  650
-    mood_ary[1] += bark_ary[7]*colorweight[7]    #  700
-    mood_ary[1] += bark_ary[8]*colorweight[8]    #  850
-    mood_ary[1] += bark_ary[9]*colorweight[9]    # 1000
-    mood_ary[2] += bark_ary[10]*colorweight[10]  # 1150
-    mood_ary[2] += bark_ary[11]*colorweight[11]  # 1350
-    mood_ary[2] += bark_ary[12]*colorweight[12]  # 1600
-    mood_ary[2] += bark_ary[13]*colorweight[13]  # 2100  
-    mood_ary[2] += bark_ary[14]*colorweight[14]  # 2500
-    mood_ary[2] += bark_ary[15]*colorweight[15]  # 2900
-    mood_ary[2] += bark_ary[16]*colorweight[16]  # 3400
-    mood_ary[2] += bark_ary[17]*colorweight[17]  # 4000
-    mood_ary[2] += bark_ary[18]*colorweight[18]  # 4800
-    mood_ary[2] += bark_ary[19]*colorweight[19]  # 5800
-    mood_ary[2] += bark_ary[20]*colorweight[20]  # 7000
-    mood_ary[2] += bark_ary[21]*colorweight[21]  # 8500
-    mood_ary[2] += bark_ary[22]*colorweight[22]  #10500
-    mood_ary[2] += bark_ary[23]*colorweight[23]  #13500
-    
-
-    
-    # Try to get a decent spread of most colors via some basic factor correction
-    #  (also factor decrease, since we just did a many-buckets-to-one we just did)
-    #  consider there's an effect from equal-loudness, but also from the unequal summing just now)
-    #  also keep in mind 0=red, 1=blue, 2=green
-
-    #df = pandas.DataFrame(data=mood_ary).T
-    #print df.describe()
-    #plt.imshow(bark_ary, cmap='gray', vmin=0, vmax=255)
-    #plt.show()
+    mood_ary[0] += bark_ary[0]*colorweight[0]    #   ~50Hz
+    mood_ary[0] += bark_ary[1]*colorweight[1]    #   150
+    mood_ary[1] += bark_ary[2]*colorweight[2]    #   250 #bassy ends hereish
+    mood_ary[1] += bark_ary[3]*colorweight[3]    #   350
+    mood_ary[1] += bark_ary[4]*colorweight[4]    #   450
+    mood_ary[1] += bark_ary[5]*colorweight[5]    #   550
+    mood_ary[1] += bark_ary[6]*colorweight[6]    #   650
+    mood_ary[1] += bark_ary[7]*colorweight[7]    #   700
+    mood_ary[1] += bark_ary[8]*colorweight[8]    #   850
+    mood_ary[1] += bark_ary[9]*colorweight[9]    #  1000
+    mood_ary[2] += bark_ary[10]*colorweight[10]  #  1150
+    mood_ary[2] += bark_ary[11]*colorweight[11]  #  1350
+    mood_ary[2] += bark_ary[12]*colorweight[12]  #  1600
+    mood_ary[2] += bark_ary[13]*colorweight[13]  #  2100  
+    mood_ary[2] += bark_ary[14]*colorweight[14]  #  2500
+    mood_ary[2] += bark_ary[15]*colorweight[15]  #  2900
+    mood_ary[2] += bark_ary[16]*colorweight[16]  #  3400
+    mood_ary[2] += bark_ary[17]*colorweight[17]  #  4000
+    mood_ary[2] += bark_ary[18]*colorweight[18]  #  4800
+    mood_ary[2] += bark_ary[19]*colorweight[19]  #  5800
+    mood_ary[2] += bark_ary[20]*colorweight[20]  #  7000
+    mood_ary[2] += bark_ary[21]*colorweight[21]  #  8500
+    mood_ary[2] += bark_ary[22]*colorweight[22]  # 10500
+    mood_ary[2] += bark_ary[23]*colorweight[23]  # 13500
     
     mood_ary[0] *= 0.12 
     mood_ary[1] *= 0.18
     mood_ary[2] *= 0.90
 
-    #df = pandas.DataFrame(data=mood_ary).T
-    #print df.describe()
-
-    
-    #mx = numpy.max(mood_ary)
-    #mood_ary /= mx
-    #mood_ary[0] = 1.0  * (mood_ary[0]**2.1)
-    #mood_ary[1] = 0.55 * (mood_ary[1]**2.8)
-    #mood_ary[2] = 0.28 * (mood_ary[2]**2.8)    
-    #mood_ary *= mx
-
-    #mood_ary *= 3
-    #mood_ary /= 3
-    
     #bark_ary = scipy.ndimage.maximum_filter(bark_ary, size=(1,4))
     bark_ary = scipy.ndimage.percentile_filter(bark_ary, 70, size=(5,2)) # make it seem more blocky, but still retain some spectrogram
     #mood_ary = scipy.ndimage.gaussian_filter(mood_ary, sigma=(0.6,0.2))
 
-    #bark_ary 
-    
-    #if normalize_moodbar:
-    # normalize moodbar per band (CONSIDER: maybe not? and/or maybe first take out bottom percentile?)
-    # and scale to 0..255 for rgb image
-    #hperc0 = numpy.percentile(mood_ary[0], 70) # lowish percentile to bring out the lower parts (and clip the higher)
-    #hperc1 = numpy.percentile(mood_ary[1], 70)
-    #hperc2 = numpy.percentile(mood_ary[2], 70)
-    #if hperc0+hperc1+hperc2>0:
-    #    if 0:
-    #        mood_ary[0] /= hperc0/255.
-    #        mood_ary[1] /= hperc1/255.
-    #        mood_ary[2] /= hperc2/255.
-    #    else:
-    #        mood_ary /= ((hperc0+hperc1+hperc2)/3)/255.
-
     mood_ary[mood_ary<0]=0
     mood_ary[mood_ary>255]=255
-
 
     # make spectral things more visible (after moodbar thing, to not affect color)
     mx = numpy.max(bark_ary)
     bark_ary  /= mx
     bark_ary **= 0.35
     bark_ary  *= mx
-    
+
     bark_ary[bark_ary<0]   = 0
     bark_ary[bark_ary>255] = 255    
-    
     return bark_ary.T.astype(numpy.uint8), mood_ary.T.astype(numpy.uint8)
 
-        
 
 
 def read_mood(filename):
@@ -515,7 +412,6 @@ def mood_image3(filename, height=21, width=None):
     
 def fancy_image(barkary, moodary):
     ''' Own experiment mixing moodbar's colors with the bark spectrogram we made
-             
         Takes the output pair from make_mood:
         - the 24-band bark version while we still have it,
         - the more typical 3-band one we could read later),
@@ -524,7 +420,6 @@ def fancy_image(barkary, moodary):
     '''
     from PIL import Image
     spe = Image.new('RGB',(1000,24) )
-
     # color it like the standard moodbar, one color for each time interval.
     for i in range(0,1000):
         lo, mid, hi = moodary[i][0], moodary[i][1], moodary[i][2] # could be weighted from barkary
@@ -533,8 +428,7 @@ def fancy_image(barkary, moodary):
             fval = float(val)/256.
             spe.putpixel( (i,23-bark),  #23-   puts low freqs at bottom, not top
                           (int(lo*fval),int(hi*fval),int(mid*fval))  )
-                          # note this deviates from moodbar: jere blue is mid, green is high
-
+                          # note this deviates from moodbar: here blue is mid, green is high
     return spe
 
 
@@ -547,16 +441,12 @@ style_shades   = u' \u2591\u2592\u2593\u2589'
 def mood_text(filename, width=78, color=True, truecolor=False, style=style_vertical):
     ''' RGB-colored, Unicode-block-characters-using line of terminal goodness '''
     import helpers_shellcolor as sc # TODO: deal with absence
-    
     im = mood_image(filename, height=1, width=width)
-    
     def char_for_v255(i, charset=style):
         f = float(i)/256.
         l = len(charset)
         i = f*l
-        #print i,charset[int(i)]
         return charset[int(i)]
-
     ret = []
     for x in range(im.size[0]):
         r,g,b = im.getpixel( (x,0) )
