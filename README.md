@@ -37,9 +37,8 @@ Currently
 
 ## Further experiments
  
-- moodbar-text - shell output, fancy unicode graph stuff and truecolor. Because why not?
+- moodbar-text - shell output, with fancy unicode graph stuff and truecolor (`-t`, it'll be 8-color and ugly without). Because why not?
 ![text-mode output](screenshots/textmood_tc.png?raw=true) 
-
 
 
 - moodbar-correlate - ideas like that...
