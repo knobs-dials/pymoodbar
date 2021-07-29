@@ -1,0 +1,58 @@
+#!/usr/bin/python
+'''
+    Shows .mood file on the console, with colors and/or unicode characters 
+'''
+import sys
+import time
+import optparse
+
+import helpers_moodbar
+
+if __name__ == '__main__':
+    p = optparse.OptionParser()
+    p.add_option("-w", "--width",              dest="width",      default=None,  action="store",      help="Width. Default is to detect it from the shell")
+    p.add_option("-a", "--style-ascii",        dest="ascii",      default=False, action="store_true", help="Draw with just ASCII characters")
+    p.add_option("-b", "--style-verticalbars", dest="vertical",   default=False, action="store_true", help="Draw with vertical bars (Unicode) (default)")
+    p.add_option("-s", "--style-shades",       dest="shades",     default=False, action="store_true", help="Draw with shaded blocks (Unicode)")
+    p.add_option("-n", "--nocolor",            dest="nocolor",    default=False, action="store_true", help="Don't use color codes.")
+    p.add_option("-t", "--truecolor",          dest="truecolor",  default=False, action="store_true", help="Use true-color codes.")
+    p.add_option("-v", "--verbose",            dest="verbose",    default=False, action="store_true", help="Print more individual things.")
+    options, args = p.parse_args()  
+
+    width = options.width
+    try:
+        if width != None: # specified
+            width = int(width)
+        else: # detect
+            import helpers_shellcolor # here only because it has terminal width detection
+            width = helpers_shellcolor.tty_size()['cols']
+    except ImportError: # detect, but module missing
+        pass
+    if width==None:
+        width = int( 80 )
+
+    if options.ascii:
+        style = helpers_moodbar.style_ascii
+    elif options.vertical:
+        style = helpers_moodbar.style_vertical
+    elif options.shades:
+        style = helpers_moodbar.style_shades
+    else:
+        style = helpers_moodbar.style_vertical
+
+    color = not options.nocolor
+        
+    for moodfilename in args:
+        if options.verbose:
+            print( moodfilename)
+        
+        print( helpers_moodbar.mood_text(moodfilename, width=width, style=style, color=color, truecolor=options.truecolor ) )
+
+        # was tesing how much effect resizes have on the bar style, and how much blur we need to reduce that effect
+        #print( '  [%s]  '%helpers_moodbar.mood_text(moodfilename, width=width-6, style=style, color=color, truecolor=options.truecolor ) )
+        #print( ' [%s] '%helpers_moodbar.mood_text(moodfilename, width=width-4, style=style, color=color, truecolor=options.truecolor ) )
+        #print( '[%s]'%helpers_moodbar.mood_text(moodfilename, width=width-2, style=style, color=color, truecolor=options.truecolor ) )
+
+        # "things scrolling by, must be hacking"  mode means not scrolling very fast :)
+        #import random
+        #time.sleep( random.uniform( 0.05, 0.27) )
