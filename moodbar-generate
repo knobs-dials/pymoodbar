@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 ''' By default it runs on a single file - I think I did that to have it be a drop-in.
     To run it on a bunch of files, use -r. 
 '''
@@ -14,7 +14,6 @@ import numpy
 from PIL import Image
 
 import helpers_path
-import helpers_string
 import helpers_moodbar
 import helpers_progressbar
 import helpers_exec
@@ -42,14 +41,14 @@ def single(ffn, force_redo=False):
     try:
         if force_redo or (not (os.path.exists(fp_mood) and os.stat(fp_mood).st_size==3000)):
             if VERBOSE:
-                print "Generating mood for %r"%arg
+                print( "Generating mood for %r"%arg)
             barkary, moodary = helpers_moodbar.make_mood(ffn)
             if barkary is None: # make_mood decided nope.
-                print "Failed for %r"%ffn
+                print( "Failed for %r"%ffn)
                 return
             
             if VERBOSE:
-                print "Writing mood file to %r"%fp_mood
+                print( "Writing mood file to %r"%fp_mood)
             filebytes = moodary.tostring()
             f = file(fp_mood,'wb')
             f.write(filebytes)
@@ -60,14 +59,14 @@ def single(ffn, force_redo=False):
 
         if not os.path.exists(fp_png):
             if VERBOSE:
-                print "Writing thumbnail to %r"%fp_png
+                print( "Writing thumbnail to %r"%fp_png)
             im = helpers_moodbar.mood_image(fp_mood)
             im.save(fp_png)
-    except Exception, e:
+    except Exception as e:
         raise
-        print
-        print "%r"%ffn
-        print helpers_string.wrap_indent( str(e) )
+        print("")
+        print( "%r"%ffn)
+        print(str(e))
         
 
         
@@ -124,7 +123,7 @@ if __name__ == '__main__':
             #proctitle( 'moodbar-generate [scanning to remove]' )
             deleteme = set()
             nkeeps, ndeletes=0,0
-            print "Scanning to remove lone .mood and .mood.png files..."
+            print( "Scanning to remove lone .mood and .mood.png files...")
             for dirname in args:
                 dirname = os.path.abspath(dirname)
                 for d,ed,ef in os.walk( dirname ):
@@ -156,28 +155,28 @@ if __name__ == '__main__':
                             deleteme.add( ffn )
             # only delete if it passes sanity check, or forced
             #proctitle( 'moodbar-generate [removing]' )
-            print "Deciding..."
+            print( "Deciding...")
             if options.dryrun:
-                print "(DRY RUN) would",
-            print "keep:%d  delete:%d"%(nkeeps,ndeletes)
+                print( "(DRY RUN) would",)
+            print( "keep:%d  delete:%d"%(nkeeps,ndeletes))
             if (ndeletes>nkeeps or ndeletes>1000) and not options.forceremove:
-                print "This seems like a very high number of deletes, not actually considering it (you can --force-remove if you are sure)"
+                print( "This seems like a very high number of deletes, not actually considering it (you can --force-remove if you are sure)")
             else:                
                 for ffn in sorted(deleteme):
                     if options.dryrun:                    
                         if options.verbose:
-                            print 'would delete: %r'%ffn
+                            print( 'would delete: %r'%ffn)
                     else:
                         if options.verbose:                    
-                            print "deleting %r"%ffn
+                            print( "deleting %r"%ffn)
                         os.unlink(ffn)
-            print
+            print("")
         
         
         ### Generate phase ###################
         if not options.nogenerate:
             #proctitle( 'moodbar-generate [scanning to generate]' )
-            print "Scanning to generate .mood and .mood.png files..."
+            print( "Scanning to generate .mood and .mood.png files...")
             def workfunc(tup):
                 ffn, moodffn, size = tup
                 #print '= %s ='%ffn
@@ -207,7 +206,7 @@ if __name__ == '__main__':
                         moodffn  = os.path.join( fpextless+'.mood' )
                             
                         if not os.path.exists( moodffn ):
-                            print "TODO (missing): %r"%ffn
+                            print( "TODO (missing): %r"%ffn)
                             todo.append( (ffn, moodffn, os.stat(ffn).st_size ) )
                         else: # mood exists
                             moodstob = os.stat(moodffn)
@@ -221,7 +220,7 @@ if __name__ == '__main__':
                                 #print 'redo days:%d redo secs:%d   file age:%d'%( redo_age_day, redo_age_sec, age_sec, )
                                 
                                 if (age_sec > redo_age_sec):
-                                    print "TODO (mood exists but %d days old): %r"%(age_sec/(60*60*24), ffn)
+                                    print( "TODO (mood exists but %d days old): %r"%(age_sec/(60*60*24), ffn))
                                     todo.append( (ffn, moodffn, os.stat(ffn).st_size) )
                                 else:
                                     #print "Skip %r, new: %r"%(ffn, moodffn)
@@ -235,7 +234,7 @@ if __name__ == '__main__':
             proctitle( 'moodbar-generate [generating]' )
 
             if options.dryrun:
-                print "(DRY RUN):  Have %d to generate,  %d exist already"%(len(todo), skip)            
+                print( "(DRY RUN):  Have %d to generate,  %d exist already"%(len(todo), skip)         )   
             else:
                 if options.smallest:
                     todo.sort(lambda a,b: cmp(a[2],b[2]))
@@ -244,7 +243,7 @@ if __name__ == '__main__':
                 elif options.shuffle:
                     random.shuffle(todo)
 
-                print "Doing %d now,  skipping %d that already exist"%(len(todo), skip)
+                print( "Doing %d now,  skipping %d that already exist"%(len(todo), skip))
 
                 procs = None
                 try:
@@ -266,7 +265,7 @@ if __name__ == '__main__':
                 mypool.join()
                 pb.simple( forcedraw=True )
 
-                print
-                print "DONE"
-                print
+                print("")
+                print( "DONE")
+                print("")
 
