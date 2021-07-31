@@ -241,7 +241,7 @@ if __name__ == '__main__':
             samplecount = 0
 
             start_time = time.time()
-            for chunk in stream_audio(filename, 44100, 44100, debug=True):
+            for chunk in stream_audio(filename, sample_rate=44100, chunk_samples=44100, debug=True):
                 samplecount+=len(chunk)
             took_time = time.time() - start_time
 
