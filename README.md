@@ -98,7 +98,7 @@ Based on the ideas that...
 
 
 ## TODO:
-- check that the FFT sound code actually makes sense
+- check that the FFT and sound code actually makes sense
 - do STFT with overlapping windows
 - actually implement moodbar-correlate
 - Look at further optimizations for the analysis, it still takes a few seconds per song
