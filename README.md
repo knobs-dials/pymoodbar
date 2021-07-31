@@ -68,7 +68,9 @@ Options:
 
 ## moodbar-text (plaything)
 
-Shell output, with fancy unicode graph stuff and truecolor (`-t`, it'll be 8-color and ugly without). Because why not?
+Shell output, with fancy unicode graph stuff and truecolor (`-t`, it'll be 8-color and ugly without). 
+
+Doesn't have much use, but looks pretty:
 ![text-mode output, unsorted selection of songs](screenshots/textmood_tc.png?raw=true) 
 
 ```
