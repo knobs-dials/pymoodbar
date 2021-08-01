@@ -99,11 +99,11 @@ Based on the ideas that...
 
 
 ## TODO:
-- check that the FFT and sound code actually makes sense
-- do STFT with overlapping windows
+- double check that the FFT and sound code actually makes sense
 - actually implement moodbar-correlate
 - Look at further optimizations for the analysis, it still takes a few seconds per song
-- look at using PyDub (or similar) instead of my own ffmpeg wrapper
+- do STFT with overlapping windows?  (bunch more work, little effect)
+- look at using PyDub (or similar) instead of my own ffmpeg wrapper?
 - look at
     - https://github.com/spezifisch/pymoodbar (py wrapper around the analysis part in C?)
     - https://github.com/globeone/moodbar  (drop-in command, C?)
