@@ -15,9 +15,9 @@ You probably do NOT want this one. if you want a drop-in that is just as fast, o
 
 
 ## Dependencies
-* numpy, scipy
+* numpy, scipy (for FFT)
 * PIL (for mood-to-image code)
-* ffmpeg/avconv executables being in the PATH
+* ffmpeg executable being in the PATH
 
 
 ## moodbar-generate
