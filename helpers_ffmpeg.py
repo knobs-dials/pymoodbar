@@ -1,17 +1,16 @@
 '''
-    This is an experiment to how robustly we can force ffmpeg CLI command to be a waveform reader for us,
-    so that we don't have to link with the ffmpeg libraries.
+    Experimenting with how robustly we can use ffmpeg CLI command to be a waveform reader for us,
+    so that we don't have to deal with binary linking with the ffmpeg libraries (or similar).
 
-    In the current use We ask ffmpeg for 16-bit mono, and return chunk_samples-sized float32 numpy arrays at a time
+    In the current use we ask ffmpeg for 16-bit mono, and return chunk_samples-sized float32 numpy arrays at a time.
 
-    It became a more messy threaded thing because it turned out detecting decode failure involves
-    checking stderr's contents.
-    Also I wanted this to be a generator, for streaming reasons,  which implies I needed stdout in a separate thread.
-    (CONSIDER: rethink that - it may mean the process may not get cleaned up)
+    I wanted this to be a generator for streaming reasons, and it turned out detecting decode failure involves,
+    so it became a more messy threaded thing because. It may be possible to simplify that.
 
     TODO:
-    - detect ffmpeg/ffprobe ahead of time rather than just assuming they're there, fail out properly
+    - detect ffmpeg/ffprobe ahead of time rather than just assuming they're there, fail out with proper message properly
       - detect avconv as well as ffmpeg
+    - rethink the thready details, it may mean the process may not get cleaned up?
 '''
 
 import os
