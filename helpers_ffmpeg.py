@@ -133,12 +133,13 @@ def stream_audio(filename, sample_rate, chunk_samples, debug=False):
         There are some lefovers from the first version loading the entire song in one numpy array,
         but that was always going to be replaced by streaming - an hour-long track would eat all your RAM.
      
-        This function raises ValueError when ffmpeg fails out.
-         There is an interesting footnote to this: sometimes the things e.g. the MPEG muxer trips over
-         I consider to be non-issues, so like an APEv2 tag at the end (such as that added by mp3gain). 
-         So you _may_ want to decide that if the decoded length is within about a second of the length ffprobe estimates, all is well.
-         TODO: make it more defined/known whether we get the last samples, or might quit early.
-        Raises IOError if the file does not exist
+        Raises IOError if the file does not exist.
+        Raises ValueError when ffmpeg fails out.
+         There is an interesting footnote to this: the muxer may trip over metadata,
+         e.g. the APEb2 tag that mp3gain added, because it's not valid MPEG frame data. 
+         This specific example is not uncommon, so you _may_ want to decide that 
+         if a failure is within a second of the end, all is well.
+        CONSIDER: make it more defined/known whether we get the last samples, or might quit early.
     """
     # hardcoded(ish) because it simplifies the only way I currently call it.
     bytesperchunk = chunk_samples*2 # because 2 bytes per sample, otherwise the numpy conversion is ehh
