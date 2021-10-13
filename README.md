@@ -4,13 +4,13 @@ Python (numpy, scipy) implementation of moodbar (see the paper mentioned below f
 Is a first version, treat with care.
 
 
-I wrote this partly for coding exerise, as a testbed to play with some critical band and equal loudness stuff, to try images with more spectral detail, and maybe later things like beat and rhythm, and wanted to see how useful it might be as a fingerprint or comparison sort of thing.
+I wrote this partly for coding exerise, as a testbed to play with some critical band and equal loudness code, to try creating images with more spectral detail, see how useful it might be as a fingerprint or comparison sort of thing, and maybe later things like beat and rhythm.
 
 Also because the original was annoying to get to compile due to dependencies.
 This one wraps the CLI ffmpeg instead.
 
 ...point is, as it is right now, this is more an experiment than a direct drop-in. 
-See the links section below for things that are probably faster, and generates the .mood files the same way as before.
+See the links section for things that are probably faster, and generate the .mood files the same way as before.
 
 
 ## Dependencies
