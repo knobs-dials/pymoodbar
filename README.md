@@ -1,6 +1,6 @@
 # pymoodbar
 
-Python (numpy, scipy) implementation of moodbar (see the paper mentioned below for the concept), plus some experiments.
+Python reimplementation of moodbar (see the paper mentioned below for the concept), plus some experiments.
 Is a first version, treat with care.
 
 
