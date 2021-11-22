@@ -25,7 +25,7 @@ See the links section for things that are probably faster, and generate the .moo
 - applies equal-loudness curve, 
 - sorts energy into Bark-style critical bands.
 - Generates 
-  - the classic RGB-per-1000th-song .mood file
+  - the classic RGB-per-1000th-song .mood file (though not weighed the same way)
   - and a PNG that is a Bark-style spectrogram, colored by the .mood colors. A few examples of those:
 
 ![A few examples: lofi, reggae, rock, calm electro, crust, indie band, ethereal/vocal](screenshots/examples.png?raw=true)
