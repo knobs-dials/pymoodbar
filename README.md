@@ -1,10 +1,10 @@
 # pymoodbar
 
 Python reimplementation of moodbar (see the paper mentioned below for the concept), plus some experiments.
+
 Is a first version, treat with care.
 
-
-I wrote this partly for coding exerise, as a testbed to play with some critical band and equal loudness code, to try creating images with more spectral detail, see how useful it might be as a fingerprint or comparison sort of thing, and maybe later things like beat and rhythm.
+I wrote this partly for coding exerise, as a testbed to play with some audio, critical band, and equal loudness code, to try creating moodbar-style images with some spectral detail, to see how useful it might be as a fingerprint or comparison sort of thing, and maybe later things like beat and rhythm.
 
 Also because the original was annoying to get to compile due to dependencies.
 This one wraps the CLI ffmpeg instead.
