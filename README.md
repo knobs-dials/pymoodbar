@@ -6,8 +6,8 @@ Is a first version, treat with care.
 
 I wrote this partly for coding exerise, as a testbed to play with some audio, critical band, and equal loudness code, to try creating moodbar-style images with some spectral detail, to see how useful it might be as a fingerprint or comparison sort of thing, and maybe later things like beat and rhythm.
 
-Also because the original was annoying to get to compile due to dependencies.
-This one wraps the CLI ffmpeg instead.
+Also because the original moodbar implementation annoying to get to compile due to dependencies (but others have dealt with that better - see the links below).
+This one wraps the CLI ffmpeg instead of linking gstreamer.
 
 ...point is, as it is right now, this is more an experiment than a direct drop-in. 
 See the links section for things that are probably faster, and generate the .mood files the same way as before.
