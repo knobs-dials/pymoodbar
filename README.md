@@ -2,7 +2,7 @@
 
 Python reimplementation of moodbar (see the paper mentioned below for the concept), plus some experiments.
 
-Is a first version, treat with care.
+Is a first version, treat with care. Also, (I need to rethink the normalization used)
 
 I wrote this partly for coding exerise, as a testbed to play with some audio, critical band, and equal loudness code, to try creating moodbar-style images with some spectral detail, to see how useful it might be as a fingerprint or comparison sort of thing, and maybe later things like beat and rhythm.
 
