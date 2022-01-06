@@ -1,34 +1,33 @@
-"""
-Eases production of colors in the terminal,
-  and only doing so when it is capable of showing it.
-  (whether we are in a tty, and whether the TERM suggests we are color-capable.
-   You can override that in manual checks with the arguments on guess_color_support(),
-   You can override that in the automatic checks (necessary for the convenience function)
-   by setting the globals default_forceifnoterm and/or default_forceifnotty)
+""" Eases production of colors in the terminal,
+    and only doing so when it is capable of showing it.
+    (whether we are in a tty, and whether the TERM suggests we are color-capable.
+    You can override that in manual checks with the arguments on guess_color_support(),
+    You can override that in the automatic checks (necessary for the convenience function)
+    by setting the globals default_forceifnoterm and/or default_forceifnotty)
 
-  
-Currently provides some convenience functions for a single foreground color,
-meant to be used like
-  import helpers_shellcolor as sc
-  print sc.red('shown as red')
-Without the check and for more control:
-  print sc.BRIGHT+sc.BLUE+sc.UNDERLINE+'shown bright blue'+sc.RESET
+    
+    Currently provides some convenience functions for a single foreground color,
+    meant to be used like
+    import helpers_shellcolor as sc
+    print sc.red('shown as red')
+    Without the check and for more control:
+    print sc.BRIGHT+sc.BLUE+sc.UNDERLINE+'shown bright blue'+sc.RESET
 
-Tries to only add the control codes when the context seems capable of it.
-  (TODO: this needs some tuning)
-  check whether we are in a tty, and whether the TERM suggests we are color-capable.
-  You can override that in manual checks with the arguments on guess_color_support(),
-  You can override that in the automatic checks (necessary for the convenience function)
-    by setting the globals default_forceifnoterm and/or default_forceifnotty
+    Tries to only add the control codes when the context seems capable of it.
+    (TODO: this needs some tuning)
+    check whether we are in a tty, and whether the TERM suggests we are color-capable.
+    You can override that in manual checks with the arguments on guess_color_support(),
+    You can override that in the automatic checks (necessary for the convenience function)
+        by setting the globals default_forceifnoterm and/or default_forceifnotty
 
 
-TODO:
- consider writing a percent formatter that is aware of the zero width of these escapes,
- so that you can put strings in things like %20s without magic weirdness.
+    TODO:
+    consider writing a percent formatter that is aware of the zero width of these escapes,
+    so that you can put strings in things like %20s without magic weirdness.
 
- rename to, perhaps, helpers_terminal.py ?
+    rename to, perhaps, helpers_terminal.py ?
 
- see whether tput colors is useful (e.g. detecting more colors)
+    see whether tput colors is useful (e.g. detecting more colors)
 
 """
 #def format(s, *args):
@@ -36,15 +35,95 @@ TODO:
 import os
 import sys
 import re
-import time
 import math
 
-# match percent formatting:
-pre = re.compile(r'((%)([+\ -]+)?([0-9]*)([.][0-9]*)?([%csdiuxXoeEfFgGpr]))') 
-# match some escapes (needs work!)
-ere = re.compile(r'\x1b[^ABCDEFGHJKSTfmnsulnh]*[ABCDEFGHJKSTfmnsulnh]')
 
-_guess = None
+
+default_forceifnoterm = None
+default_forceifnotty  = None
+
+
+def guess_color_support(forceifnottty=False, forceifnoterm=False, fallback=True):
+    ''' Tries to guess whether we can use color code output.
+
+        If we are not on a tty/pty (usually a pipe), return False
+        If the TERM mentions we can, returns True, if it mensions we cannot, return False
+        If we do not know, return the fallback (by default is True)        
+    
+        TODO: fix the logic for this, it does not do exactly what was intended.
+
+        User code should probably always prefer supported(),
+        and only use guess_color_support if it wants a different test or fallback later.
+    '''
+    global _guess
+    
+    if not default_forceifnoterm  and  not forceifnoterm:
+        if 'TERM' not in os.environ:
+            #print( "probably not a shell" )
+            _guess = False
+            return _guess
+
+    if not default_forceifnotty   and  not forceifnottty:
+        if not sys.stdout.isatty():
+            #print( "Not a TTY, probably a pipe" )
+            
+            # Assumes that this means it's a less pipe,
+            #         that setting LESS=R means you want it in all pipes,
+            #         that you have set LESS=R only in the shells where that makes sense
+            # TODO: fewer assumptions 
+            #_guess = False
+            #if 'LESS' in os.environ:
+            #    if 'R' in os.environ['LESS']:
+            #        #print( "Rawness in LESS env setting")
+            #        _guess = True
+            return _guess
+        
+    if 'TERM' in os.environ:
+        try:
+            import subprocess
+            p=subprocess.Popen(['tput', 'colors'], stdout=subprocess.PIPE, shell=False)
+            out,_=p.communicate()
+
+            if out.strip()=='':
+                return False
+            elif int(out.strip())>2:
+                _guess = True
+                return _guess
+            else:
+                _guess = False
+                return _guess
+        except:
+            raise
+        
+            TERM = os.environ['TERM']
+            if TERM.endswith('-m') or '-m-' in TERM or 'nocolor' in TERM:
+                _guess = False
+                return _guess
+            if TERM.endswith('-c') or '-c-' in TERM or 'color' in TERM:
+                _guess = True
+                return _guess
+            # maybe test for -ansi ?        
+            if 'rxvt' in TERM or 'putty' in TERM: # or 'linux' in TERM?
+                _guess = True
+                return _guess
+
+    _guess = fallback
+    return _guess
+
+def supported():
+    global _guess
+    _guess = None
+    if _guess == None:
+        guess_color_support()
+    return _guess
+
+# we assume our answer will not change within a shell, so our first guess stays true
+_guess = supported()
+#_guess = None # none before detection,  True if we guessed yes,  False if we guessed no.
+
+
+
+
 
     
 # Try to get column width (*nix-mostly)
@@ -129,7 +208,6 @@ def tty_size(debug=False):
     if ret['rows'] not in (0,None) and ret['cols'] not in (0,None):
         return ret
 
-    
     try:
         # from http://code.activestate.com/recipes/440694-determine-size-of-console-window-on-windows/
         from ctypes import windll, create_string_buffer
@@ -148,7 +226,6 @@ def tty_size(debug=False):
             raise
     if ret['rows'] not in (0,None) and ret['cols'] not in (0,None):
         return ret
-
 
     # Last because this won't change on resize (most others will)
     #shutil.get_terminal_size  (py3 only) seems to just do the following
@@ -169,154 +246,61 @@ def tty_size(debug=False):
 
 
 # Keep in mind that 'bright' is a state that stays enabled, you'ld need a NOCOLOR (or RESET) to no non-bright.
-BRIGHT       = '\x1b[1m'
-NOCOLOR      = '\x1b[0m'
-UNDERLINE    = '\x1b[4m'
+BRIGHT         = '\x1b[1m'
+NOCOLOR        = '\x1b[0m'
+UNDERLINE      = '\x1b[4m'
 #
-BLACK        = '\x1b[30m'
-BRIGHTBLACK  = '\x1b[1;30m'
-RED          = '\x1b[31m'
-BRIGHTRED    = '\x1b[1;31m'
-GREEN        = '\x1b[32m'
-BRIGHTGREEN  = '\x1b[1;32m'
-YELLOW       = '\x1b[33m'
-ORANGE       = YELLOW
-BRIGHTYELLOW = '\x1b[1;33m'
-BLUE         = '\x1b[34m'
-BRIGHTBLUE   = '\x1b[1;34m'
-MAGENTA      = '\x1b[35m'
-BRIGHTMAGENTA= '\x1b[1;35m'
-CYAN         = '\x1b[36m'
-BRIGHTCYAN   = '\x1b[1;36m'
-GREY         = '\x1b[37m'
-GRAY=GREY
-BRIGHTGREY   = '\x1b[1;37m'
-BRIGHTGRAY   = BRIGHTGREY
-WHITE        = BRIGHTGREY
-DEFAULT      = '\x1b[39m'
+BLACK          = '\x1b[30m'
+BRIGHTBLACK    = '\x1b[1;30m'
+RED            = '\x1b[31m'
+BRIGHTRED      = '\x1b[1;31m'
+GREEN          = '\x1b[32m'
+BRIGHTGREEN    = '\x1b[1;32m'
+YELLOW         = '\x1b[33m'
+ORANGE         = YELLOW
+BRIGHTYELLOW   = '\x1b[1;33m'
+BLUE           = '\x1b[34m'
+BRIGHTBLUE     = '\x1b[1;34m'
+MAGENTA        = '\x1b[35m'
+BRIGHTMAGENTA  = '\x1b[1;35m'
+CYAN           = '\x1b[36m'
+BRIGHTCYAN     = '\x1b[1;36m'
+GREY           = '\x1b[37m'
+GRAY            = GREY
+BRIGHTGREY     = '\x1b[1;37m'
+BRIGHTGRAY     = BRIGHTGREY
+WHITE          = BRIGHTGREY
+DEFAULT        = '\x1b[39m'
 
 # TODO: consider them garish background colors
-BGBLACK   = '\x1b[40m'
-BGRED     = '\x1b[41m'
-BGGREEN   = '\x1b[42m'
-BGBLUE    = '\x1b[44m'
-BGYELLOW  = '\x1b[43m'
-BGORANGE  = BGYELLOW
-BGMAGENTA = '\x1b[45m'
-BGCYAN    = '\x1b[46m'
-BGWHITE   = '\x1b[47m'
+BGBLACK        = '\x1b[40m'
+BGRED          = '\x1b[41m'
+BGGREEN        = '\x1b[42m'
+BGBLUE         = '\x1b[44m'
+BGYELLOW       = '\x1b[43m'
+BGORANGE       = BGYELLOW
+BGMAGENTA      = '\x1b[45m'
+BGCYAN         = '\x1b[46m'
+BGWHITE        = '\x1b[47m'
 BGBRIGHTGRAY   = '\x1b[1;47m'
-BGWHITE = BGBRIGHTGRAY
+BGWHITE        = BGBRIGHTGRAY
 
 # functional stuff
 ERASEDISP    = '\x1b[2J' # erase all
 #ERASEBEFORE  = '\x1b[1J' # erase from cursor up
 #ERASEAFTER   = '\x1b[J'  # erase from cursor down
 GOTO00       = '\x1b[;H'
-CLEARSCREEN  = ERASEDISP+GOTO00
+CLEARSCREEN  = ERASEDISP + GOTO00
 ERASELINE    = '\x1b[2K'
 #ERASELINEBEFORE= '\x1b[1K'
 #ERASELINEAFTER = '\x1b[K'
 
-RESET=NOCOLOR+DEFAULT
-
-    
-default_forceifnoterm = None
-default_forceifnotty  = None
-
-
-# This function is called once on import, in part because the subprocess is relatively expensive.
-# You can always call the function again if you want to force things.
-# It sets the _guess global, which other functions listen to at call time
-_guess = None
-
-def guess_color_support(forceifnottty=False, forceifnoterm=False, fallback=True):
-    ''' Tries to guess whether we can use color code output.
-
-        If we are not on a tty/pty (usually a pipe), return False
-        If the TERM mentions we can, returns True, if it mensions we cannot, return False
-        If we do not know, return the fallback (by default is True)        
-    
-        TODO: fix the logic for this, it does not do exactly what was intended.
-    '''
-    global _guess
-    
-    if not default_forceifnoterm  and  not forceifnoterm:
-        if 'TERM' not in os.environ:
-            #print( "probably not a shell" )
-            _guess = False
-            return _guess
-
-    if not default_forceifnotty   and  not forceifnottty:
-        if not sys.stdout.isatty():
-            #print( "Not a TTY, probably a pipe" )
-            
-            # Assumes that this means it's a less pipe,
-            #         that setting LESS=R means you want it in all pipes,
-            #         that you have set LESS=R only in the shells where that makes sense
-            # TODO: fewer assumptions 
-            #_guess = False
-            #if 'LESS' in os.environ:
-            #    if 'R' in os.environ['LESS']:
-            #        #print( "Rawness in LESS env setting")
-            #        _guess = True
-            return _guess
-        
-    if 'TERM' in os.environ:
-        try:
-            import subprocess
-            p=subprocess.Popen(['tput', 'colors'], stdout=subprocess.PIPE, shell=False)
-            out,_=p.communicate()
-
-            if out.strip()=='':
-                return False
-            elif int(out.strip())>2:
-                _guess = True
-                return _guess
-            else:
-                _guess = False
-                return _guess
-        except:
-            raise
-        
-            TERM = os.environ['TERM']
-            if TERM.endswith('-m') or '-m-' in TERM or 'nocolor' in TERM:
-                _guess = False
-                return _guess
-            if TERM.endswith('-c') or '-c-' in TERM or 'color' in TERM:
-                _guess = True
-                return _guess
-            # maybe test for -ansi ?        
-            if 'rxvt' in TERM or 'putty' in TERM: # or 'linux' in TERM?
-                _guess = True
-                return _guess
-
-    _guess = fallback
-    return _guess
-
-
-
-def supported():
-    return _guess
+RESET        = NOCOLOR + DEFAULT
 
 
 
 
-# playing around with styles, not sure which is more convenient in the end
 
-def _strip_escapes_if_not_supported(s, forceaway=False):
-    if _guess and not forceaway:
-        return s
-    else:
-        return ere.sub('',s)
-
-def _add_color_if_supported(s,colcode,prepend=''):
-    if _guess:
-        return prepend+colcode+s+RESET
-    else:
-        return s
-
-_guess = guess_color_support()
 
 
 # ease-of-use globals
@@ -358,6 +342,29 @@ def clearscreen():
     if _guess:
         return CLEARSCREEN
 
+
+
+
+# playing around with styles, not sure which is more convenient in the end
+
+
+# match percent formatting:
+pre = re.compile(r'((%)([+\ -]+)?([0-9]*)([.][0-9]*)?([%csdiuxXoeEfFgGpr]))') 
+# match some escapes (needs work!)
+ere = re.compile(r'\x1b[^ABCDEFGHJKSTfmnsulnh]*[ABCDEFGHJKSTfmnsulnh]')
+
+
+def _strip_escapes_if_not_supported(s, forceaway=False):
+    if _guess and not forceaway:
+        return s
+    else:
+        return ere.sub('',s)
+
+def _add_color_if_supported(s,colcode,prepend=''):
+    if _guess:
+        return prepend+colcode+s+RESET
+    else:
+        return s
 
 
 
@@ -593,7 +600,11 @@ def true_colf(s, r,g,b):
      return _add_color_if_supported(s,RGBCOL)
  
 def hash_color(s, rgb=False, append=RESET):
-    ' return string wrapped in a (non-black basic shell) color (and RESET after) based on the string '
+    ''' return string wrapped in a (non-black basic shell) color (and RESET after) based on the string
+
+        If rgb==False, uses the basic set of ~8 colors and brightness.
+        If rgb==True,  uses true color
+    '''
     import hashlib
     m = hashlib.sha256()
     m.update(s.encode('u8'))
