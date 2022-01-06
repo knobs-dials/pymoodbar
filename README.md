@@ -57,12 +57,14 @@ Options:
                         debugging)
   --shuffle             Shuffle generation jobs (makes ETA a little more
                         accurate because of mixed sizes)
+  --png-only            Only write the .png file, not the .mood
   -z PARALLEL, --parallel=PARALLEL
                         How many processes to run in parallel. Defaults is
                         detecting number of cores.
   -n, --dry-run         Say what we would generate/remove, don't actually do
                         it.
   -v, --verbose         Print more individual things.
+
 ```
 
 
