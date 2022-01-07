@@ -30,9 +30,9 @@ See the links section for things that are probably faster, and generate the .moo
 
 ![A few examples: lofi, reggae, rock, calm electro, crust, indie band, ethereal/vocal](screenshots/examples.png?raw=true)
 
-By default it assumes the parameters are filenames (I think I did this to act as a drop-in).
+By default moodbar-generate assumes the parameters are filenames (I think I did this to act as a drop-in).
 
-If you want to recurse into directories, use -r. 
+If you want to recurse into directories, use -r and directory arguments. 
 
 Keep in mind it will then first do a scan for which .mood files can be removed, and which need to be generated.
 This treewalk will make it slowish to start.
