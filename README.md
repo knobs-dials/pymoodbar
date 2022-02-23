@@ -100,6 +100,7 @@ Based on the ideas that...
 
 
 ## TODO:
+- reconsider normalizaton, and consider replaygain
 - double check that the FFT and sound code actually makes sense
 - actually implement moodbar-correlate
 - Look at further optimizations for the analysis, it still takes a few seconds per song
