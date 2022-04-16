@@ -9,7 +9,7 @@ I wrote this partly for coding exerise, as a testbed to play with some audio, cr
 Also because the original moodbar implementation annoying to get to compile due to dependencies on older gstreamer.  This one wraps the CLI ffmpeg instead.
 (but others have dealt with that better - see the github links below)
 
-...point is, as it is right now, this is more an experiment than a direct drop-in. 
+...point is, as it is right now, this is more experiment than drop-in. 
 See the links section for things that are probably faster, and generate the .mood files the same way as before.
 
 
