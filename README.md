@@ -3,14 +3,17 @@
 Python reimplementation of moodbar (see the paper mentioned below for the concept), plus some experiments.
 
 Is a first version, treat with care. Also, (I need to rethink the normalization used)
+<br/><br/>
+
+Right now, this is more experiment than drop-in. 
+
+See the links section for things that are probably faster, and generate the .mood files the same way as before.
 
 I wrote this partly for coding exerise, as a testbed to play with some audio, critical band, and equal loudness code, to try creating moodbar-style images with spectral detail, to see how useful it might be as a fingerprint or comparison sort of thing, and maybe later things like beat and rhythm.
 
 Also because the original moodbar implementation annoying to get to compile due to dependencies on older gstreamer.  This one wraps the CLI ffmpeg instead.
 (but others have dealt with that better - see the github links below)
 
-...point is, as it is right now, this is more experiment than drop-in. 
-See the links section for things that are probably faster, and generate the .mood files the same way as before.
 
 
 ## Dependencies
