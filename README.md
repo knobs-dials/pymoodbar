@@ -29,16 +29,18 @@ Also because the original moodbar implementation annoying to get to compile due 
 - sorts energy into Bark-style critical bands.
 - Generates 
   - the classic RGB-per-1000th-song .mood file (though not weighed the same way)
-  - and a PNG that is a Bark-style spectrogram, colored by the .mood colors. A few examples of those:
+  - a PNG that is a Bark-style spectrogram, colored by the .mood colors. A few examples of those:
 
 ![A few examples: lofi, reggae, rock, calm electro, crust, indie band, ethereal/vocal](screenshots/examples.png?raw=true)
 
-By default moodbar-generate assumes the parameters are filenames (I think I did this to act as a drop-in).
+By default, moodbar-generate assumes the parameters are filenames - I think I did this to act as a drop-in.
+
 
 If you want to recurse into directories, use -r and directory arguments. 
 
-Keep in mind it will then first do a scan for which .mood files can be removed, and which need to be generated.
-This treewalk will make it slowish to start.
+It will then first do a directory treewalk to figure out which files need to be generated (and which stray .mood files could be removed),
+before it starts generating.  Yhis can make it slow to start.
+
 
 For futher arguments:
 
