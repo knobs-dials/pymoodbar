@@ -35,10 +35,9 @@ I wrote this partly for coding exerise, as a testbed to play with some audio, cr
 By default, moodbar-generate assumes the parameters are filenames - I think I did this to act as a drop-in.
 
 
-If you want to recurse into directories, use -r and directory arguments. 
-
+If you want to recurse into directories, use -r and directory arguments.  
 It will then first do a directory treewalk to figure out which files need to be generated (and which stray .mood files could be removed),
-before it starts generating.  Yhis can make it slow to start.
+before it starts generating.  On larger sets this makes it slow to start.
 
 
 For futher arguments:
