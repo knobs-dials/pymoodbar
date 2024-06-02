@@ -3,14 +3,16 @@
 Python reimplementation of moodbar (see the paper mentioned below for the concept), plus some experiments.
 
 Is a first version, treat with care. Also, (I need to rethink the normalization used)
+<br/><br/>
+
+Right now, this is more experiment than drop-in. 
+
+See the links section for things that are probably faster, and generate the .mood files the same way as before.
 
 I wrote this partly for coding exerise, as a testbed to play with some audio, critical band, and equal loudness code, to try creating moodbar-style images with spectral detail, to see how useful it might be as a fingerprint or comparison sort of thing, and maybe later things like beat and rhythm.
 
-Also because the original moodbar implementation annoying to get to compile due to dependencies on older gstreamer.  This one wraps the CLI ffmpeg instead.
-(but others have dealt with that better - see the github links below)
+...and also because the original moodbar implementation is annoying to get to compile, due to dependencies on old version of gstreamer.  This one wraps the CLI ffmpeg instead. (but others have dealt with that better - see the github links below)
 
-...point is, as it is right now, this is more an experiment than a direct drop-in. 
-See the links section for things that are probably faster, and generate the .mood files the same way as before.
 
 
 ## Dependencies
@@ -26,16 +28,17 @@ See the links section for things that are probably faster, and generate the .moo
 - sorts energy into Bark-style critical bands.
 - Generates 
   - the classic RGB-per-1000th-song .mood file (though not weighed the same way)
-  - and a PNG that is a Bark-style spectrogram, colored by the .mood colors. A few examples of those:
+  - a PNG that is a Bark-style spectrogram, colored by the .mood colors. A few examples of those:
 
 ![A few examples: lofi, reggae, rock, calm electro, crust, indie band, ethereal/vocal](screenshots/examples.png?raw=true)
 
-By default it assumes the parameters are filenames (I think I did this to act as a drop-in).
+By default, moodbar-generate assumes the parameters are filenames - I think I did this to act as a drop-in.
 
-If you want to recurse into directories, use -r. 
 
-Keep in mind it will then first do a scan for which .mood files can be removed, and which need to be generated.
-This treewalk will make it slowish to start.
+If you want to recurse into directories, use -r and directory arguments.  
+It will then first do a directory treewalk to figure out which files need to be generated (and which stray .mood files could be removed),
+before it starts generating.  On larger sets this makes it slow to start.
+
 
 For futher arguments:
 
@@ -57,12 +60,14 @@ Options:
                         debugging)
   --shuffle             Shuffle generation jobs (makes ETA a little more
                         accurate because of mixed sizes)
+  --png-only            Only write the .png file, not the .mood
   -z PARALLEL, --parallel=PARALLEL
                         How many processes to run in parallel. Defaults is
                         detecting number of cores.
   -n, --dry-run         Say what we would generate/remove, don't actually do
                         it.
   -v, --verbose         Print more individual things.
+
 ```
 
 
@@ -98,6 +103,7 @@ Based on the ideas that...
 
 
 ## TODO:
+- reconsider normalizaton, and consider replaygain
 - double check that the FFT and sound code actually makes sense
 - actually implement moodbar-correlate
 - Look at further optimizations for the analysis, it still takes a few seconds per song
