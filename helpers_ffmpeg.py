@@ -2,29 +2,33 @@
     Experimenting with how robustly we can use ffmpeg CLI command to be a waveform reader for us,
     so that we don't have to deal with binary linking with the ffmpeg libraries (or similar).
 
-    In the current use we ask ffmpeg for 16-bit mono, and return chunk_samples-sized float32 numpy arrays at a time.
+    In the current use 
+    - we ask ffmpeg for 16-bit mono,
+    - and return chunk_samples-sized float32 numpy arrays at a time.
 
-    I wanted this to be a generator for streaming reasons, and it turned out detecting decode failure involves,
-    so it became a more messy threaded thing because. It may be possible to simplify that.
+    
+    I wanted this to be a generator so that large files could be streamed. 
+    It turns out that decode failure (from stdout _and_ stderr) is messy,
+    and an easy workaround was to have a thread for each. It may be possible to simplify that.
 
     TODO:
-    - detect ffmpeg/ffprobe ahead of time rather than just assuming they're there, fail out with proper message properly
+    - detect ffmpeg/ffprobe ahead of time rather than just assuming they're there, fail out with proper error message
       - detect avconv as well as ffmpeg
     - rethink the thready details, it may mean the process may not get cleaned up?
 '''
 
 import os
 import time
-import numpy
 import threading
 import subprocess
 try:
     import Queue
-except:
+except ImportError:
     import queue as Queue
+import numpy
 
 
-def get_length(filename, decode=False): #, debug=False
+def get_length(filename): #, decode=False, debug=False
     """ Gets media length, in seconds, using ffprobe. 
 
         I've seen this be off by 0.5 seconds,
@@ -41,17 +45,15 @@ def get_length(filename, decode=False): #, debug=False
     p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = p.communicate()
 
-    # TODO: look at retcode, like 'not such file'?
-    
+    # TODO: look at retcode, to e.g. catch 'no such file'?
     try:
         return float( out.strip() )
-    except:
+    except Exception as exc:
         if b'misdetection possible' in err:
             msg = '- seems to not be audio file: %r'%filename
         else:
             msg = "- ffprobe's response was:\n%s)"%(err.strip())
-        raise ValueError("Failed to read length %s"%(msg,))
-        
+        raise ValueError("Failed to read length %s"%(msg,)) from exc
 
 
 def _err_reader(fh, buf, sharedstate):
@@ -61,7 +63,7 @@ def _err_reader(fh, buf, sharedstate):
     '''
     line = b''
     while True:
-        ch = fh.read(1) 
+        ch = fh.read(1)
         #print( "READCH=%r"%ch )
         if len(ch)==0:
             sharedstate['finished'] = True  # EOF, without having previously quit because errors.
@@ -82,8 +84,8 @@ def _err_reader(fh, buf, sharedstate):
                 buf.append(line) # which is incomplete but still useful
                 break
                 #...CONSIDER: not doing so, somehow reading up to EOF
-                
-        
+
+
 def _out_chunker(fh, output, bytesperchunk, sharedstate):
     ''' Read ffmpeg's stdout, which contains the raw audio stream, 
         and puts() its data to output, which is expected to be a queue (because thread-safe).
@@ -92,7 +94,7 @@ def _out_chunker(fh, output, bytesperchunk, sharedstate):
         Note that we don't do the "did we read 0 bytes" EOF test on this stream (stdout)
         because it may EOF early when failing on errors.
         It's actually up to stderr handler to decide whether we finished okay or not.
-    ''' 
+    '''
     bbuffer = b''
     bytes_seen = 0
     while len(sharedstate)==0: # will stop on finished or failed
@@ -109,7 +111,7 @@ def _out_chunker(fh, output, bytesperchunk, sharedstate):
             #print "  now returning %d bytes worth of audio; now at %d "%(len(now), bytes_seen)
             audio = numpy.fromstring(now, dtype=numpy.int16).astype(numpy.float32)
             output.put( audio ) # will block when full, because queue
-            
+
         if len(sharedstate)>0:
             if 'finished' in sharedstate: # then finish up before returning
                 # then there will be fewer than chunk_size bytes left in bbuffer,
@@ -120,7 +122,7 @@ def _out_chunker(fh, output, bytesperchunk, sharedstate):
                 output.put( audio )
             break
 
-        
+
 def stream_audio(filename, sample_rate, chunk_samples, debug=False):
     """ Given 
         * any file that ffmpeg can play the audio from,
@@ -164,10 +166,10 @@ def stream_audio(filename, sample_rate, chunk_samples, debug=False):
     if not os.path.exists( filename): # saves a subprocess
         import errno
         raise IOError( errno.ENOENT, os.strerror(errno.ENOENT), filename)
-    
+
     subproc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,  bufsize=bytesperchunk)
 
-        
+
     sharedstate = {} # we need an object, to pass around by reference (rather than a primotive, by value).  This could be done more elegantly, yes.
     err_lines = []
     out_chunks = Queue.Queue(10) # threadsafe producer/consuner, with a max amount of items.
@@ -178,7 +180,7 @@ def stream_audio(filename, sample_rate, chunk_samples, debug=False):
     try:
         seen_samples = 0
         while True:
-            while out_chunks.qsize()>0: 
+            while out_chunks.qsize()>0:
                 audiosamples = out_chunks.get() # will block, consider using timeout?
                 seen_samples += audiosamples.shape[0]
                 secs = float(seen_samples)/sample_rate
@@ -193,10 +195,10 @@ def stream_audio(filename, sample_rate, chunk_samples, debug=False):
                 if debug:
                     print( '[%s] FINISHED'%filename )
                 break
-            retcode = subproc.poll()
-            #if retcode!=None: # so, ffmpeg generally returns nonzero on errors, but not always.
+            #retcode = subproc.poll()
+            #if retcode!=None: # so, ffmpeg generally returns nonzero on errors -- but not always.
             #    deal with quiet success
-            #    it will however tell us it's finished. 
+            #    it will however tell us it's finished.
             #    print retcode
             #    sleep(1) # give the err-reader some time to process all input
             #    break
@@ -207,23 +209,23 @@ def stream_audio(filename, sample_rate, chunk_samples, debug=False):
         err_thread.join()
         if debug:
             print( '[%s] ERRWAITOK '%filename )
-        
+
         # note that in theory, both finished and failed can be set, and failed should take precedence
         if 'failed' in sharedstate:
             subproc.terminate() # note: catch   OSError: [Errno 3] No such process
             if debug:
                 print( '\n'.join(err_lines[-4:]) )
             #raise ValueError('ffmpeg reported decode failure for %r'%filename)
-        
+
         if debug:
             print( '[%s] OUTWAIT '%filename )
         out_thread.join()
         if debug:
             print( '[%s] OUTWAITOK '%filename )
-        
+
         if 'failed' in sharedstate:
             raise ValueError('ffmpeg reported decode failure for %r'%filename)
-        
+
     finally:
         pass
         # TODO: remember what cleanup we need to do exactly.
@@ -231,9 +233,8 @@ def stream_audio(filename, sample_rate, chunk_samples, debug=False):
         #subproc.stderr.close()
 
 
-        
 if __name__ == '__main__':
-    ' Try to decode each mentioned file, as a test ' 
+    # Try to decode each mentioned file, as a test
     import sys
     for filename in sys.argv[1:]:
         try:
