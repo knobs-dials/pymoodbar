@@ -9,15 +9,12 @@ import random
 import multiprocessing
 import subprocess
 
-import numpy
-from PIL import Image
-
 import helpers_moodbar
 
 
 
 ### Helpers
-def fn_parts(pathstr):
+def fn_parts(pathstr):  #CONSIDER: use pathlib instead
     """ For a given path, returns a dict with
         dirname, basename, basename without extension, extension
 
@@ -41,46 +38,48 @@ def fn_parts(pathstr):
         ext   = basen[dotinbase+1:]
     return {'dir':dirn, 'base':basen , 'noext':noext , 'ext':ext, 'fullpathnoext':os.path.join(dirn,noext) }
 
-def num_cpus(fallback=None):
-    # I have a much better version somewhere.
-    cprocs = 0
-    try:
-        f = open('/proc/cpuinfo')
-        for line in f:
-            if 'processor' in line:
-                cprocs += 1
-    except:
-        raise
-    finally:
-        f.close()
 
-    if cprocs==0:
+def num_cpus(fallback=2):
+    ' estimate how many cores we have to parallelize work onto.  TODO: use the better version of this that I have somewhere '
+    counted_procs = 0
+    try:
+        with open('/proc/cpuinfo') as f:
+            for line in f:
+                if 'processor' in line:
+                    counted_procs += 1
+    except: # presumably other OS
+        return fallback
+
+    if counted_procs == 0:
         return fallback
     else:
-        return cprocs
+        return counted_procs
 
 
 def proctitle(s):
+    ' set proces title (on linux, and if this library is installed)'
     try:
         import setproctitle
         setproctitle.setproctitle( s )
     except ImportError:
         pass
 
+
 def named_like_media(fn):
+    ' ...that ffmpeg will probably extract audio from '
     fnl = fn.lower()
     for ext in ('mp3','ogg', 'flac',
-                'ogv','avi','mkv','mpg','mov','mp4','m4v','m4a','aac',
+                'mpc',
                 'mod','st','s3m','xm','it','669',
+                'ogv','avi','mkv','mpg','mov','mp4','m4v','m4a','aac',
         ):
         if fnl.endswith('.%s'%ext):
             return True
     return False
 
 
-    
-def process_single(ffn, write_mood=True, write_png=True, force_redo=False, verbose=False, ):
-    ''' '''
+def process_single(ffn, write_mood=True, write_png=True, force_redo=False, verbose=False ):
+    ''' Take a single media file, make .mood and/or .png as requested '''
     fnp = fn_parts(ffn)
     fpextless = fnp['fullpathnoext']
     fp_png  = fpextless+'.mood.png'
@@ -98,7 +97,7 @@ def process_single(ffn, write_mood=True, write_png=True, force_redo=False, verbo
             if write_mood:
                 if verbose:
                     print( "Writing mood file to %r"%fp_mood)
-                filebytes = moodary.tostring()
+                filebytes = moodary.tobytes()
                 f = open(fp_mood,'wb')
                 f.write(filebytes)
                 f.close()
@@ -107,57 +106,39 @@ def process_single(ffn, write_mood=True, write_png=True, force_redo=False, verbo
                 im = helpers_moodbar.fancy_image(barkary, moodary)
                 im.save(fp_png)
 
-        # I forgot what this is doing
-        #if not os.path.exists(fp_png):
-        #    if verbose:
-        #        print( "Writing thumbnail to %r"%fp_png)
-        #    im = helpers_moodbar.mood_image(fp_mood)
-        #    im.save(fp_png)
-
     except Exception as e:
         raise
-        print("")
-        print( "%r"%ffn)
-        print(str(e))
-        
+        print( "ERROR %r\n   for %r"%(str(e), ffn) )
 
-        
+
+
 if __name__ == '__main__':
-    os.nice(19) # try to be background
-    
+    os.nice(19)  # try to be background
+
     p = optparse.OptionParser()
-    p.add_option('-r', "--recursive",   dest="recursive",   default=False, action="store_true", help="Recurse directories. Default is to only work on specified file(s). Most options apply only in combination with -r.")
-    
-    p.add_option("--no-remove",   dest="noremove",   default=False, action="store_true", help="Don't remove .mood files without according media file")
-    p.add_option("--force-remove", dest="forceremove", default=False, action="store_true", help="If the remove step thinks it might throw away too much, and you think it's okay, force it with this.")
-
-    p.add_option("--no-generate", dest="nogenerate", default=False, action="store_true", help="Only report what we would generate, but don't do it.")
+    p.add_option('-r', "--recursive", dest="recursive",   default=False, action="store_true", help="Recurse directories. Default is to only work on specified file(s). Most options apply only in combination with -r.")
+    p.add_option("--no-remove",       dest="noremove",    default=False, action="store_true", help="Don't remove .mood files without according media file")
+    p.add_option("--force-remove",    dest="forceremove", default=False, action="store_true", help="If the remove step thinks it might throw away too much, and you think it's okay, force it with this.")
+    p.add_option("--no-generate",     dest="nogenerate",  default=False, action="store_true", help="Only report what we would generate, but don't do it.")
+    p.add_option("--force-redo",      dest="redo",        default=False, action="store_true", help="Generate even if one exists already (probably avoid combining with -r unless you mean it)")
+    p.add_option("--redo-age",        dest="redo_age",    default=None,  action="store",      help="Generate if older than this amount of days (used for debugging)")
+    p.add_option("--shuffle",         dest="shuffle",     default=False, action="store_true", help="Shuffle generation jobs (makes ETA a little more accurate because of mixed sizes)")
+    p.add_option("--png-only",        dest="png_only",    default=False, action="store_true", help="Only write the .mood.png file, not the .mood")
     #p.add_option("--no-png", dest="nopng", default=False, action="store_true", help="Don't generate the fancier png (e.g. when you won't use it anyway)")
-    p.add_option("--force-redo",  dest="redo", default=False, action="store_true", help="Generate even if one exists already (probably avoid combining with -r unless you mean it)")
-    p.add_option("--redo-age",    dest="redo_age", default=None, action="store", help="Generate if older than this amount of days (used for debugging)")
-
-    p.add_option("--shuffle",  dest="shuffle", default=False, action="store_true",
-                     help="Shuffle generation jobs (makes ETA a little more accurate because of mixed sizes)")
-
-
-    p.add_option("--png-only",  dest="png_only", default=False, action="store_true",
-                     help="Only write the .png file, not the .mood")
-
-    p.add_option('-z', "--parallel",  dest="parallel", default=None, action="store",
-                     help="How many processes to run in parallel. Defaults is detecting number of cores.")
-    p.add_option("-n", "--dry-run",  dest="dryrun",  default=False, action="store_true", help="Say what we would generate/remove, don't actually do it.")
-    p.add_option("-v", "--verbose",  dest="verbose",  default=False, action="store_true", help="Print more individual things.")
-    options, args = p.parse_args()  
+    p.add_option('-z', "--parallel",  dest="parallel",    default=None,  action="store",      help="How many processes to run in parallel. Defaults is detecting number of cores.")
+    p.add_option("-n", "--dry-run",   dest="dryrun",      default=False, action="store_true", help="Say what we would generate/remove, don't actually do it.")
+    p.add_option("-v", "--verbose",   dest="verbose",     default=False, action="store_true", help="Print more individual things.")
+    options, args = p.parse_args()
 
     want_png=True
     want_mood=True
     if options.png_only:
         want_mood=False
 
-    if options.redo_age!=None:
+    if options.redo_age is not None:
         redo_age_day = float(options.redo_age)
         redo_age_sec = 60*60*24*redo_age_day
-        
+
 
     if not options.recursive: # work on given file argument(s)   (this may well be a  a subprocess from our own -r parent)
         for fn in args:
@@ -165,12 +146,12 @@ if __name__ == '__main__':
             if os.path.isfile(ffn):
                 # CONSIDER: pool this one too (for when other things call this without parallelizing).
                 process_single(ffn,   write_mood=want_mood, write_png=want_png,   force_redo=options.redo, verbose=options.verbose)
-                
- 
+
+
     else: # scan directories, decide when we need to run copies of ourself without -r
         proctitle( 'moodbar-generate;scan' )
-        
-        remove_actions   = [] 
+
+        remove_actions   = []
         generate_actions = []
 
         nkeeps, ndeletes=0,0
@@ -184,38 +165,38 @@ if __name__ == '__main__':
                 for filename in filenames:
                     ffn = os.path.join(root, filename)
 
-                    ### .mood and .mood.png without a base file 
+                    ### .mood and .mood.png without a base file
                     if filename.endswith('.mood'):
                         if filename[:-5] not in one_ext_fewer:
                             remove_actions.append(  ('.mood without media', ffn)  )
-                            ndeletes +=1
+                            ndeletes += 1
                         else:
-                            nkeeps += 1
+                            nkeeps   += 1
 
                     if filename.endswith('.mood.png'):
                         if filename[:-9] not in one_ext_fewer:
                             remove_actions.append(  ('.mood.png without media', ffn)  )
-                            ndeletes +=1
+                            ndeletes += 1
                         else:
-                            nkeeps += 1
+                            nkeeps   += 1
 
                     ### media files without requested files?
                     if named_like_media(filename):
-                        fnp = fn_parts(filename)
+                        fnp       = fn_parts(filename)
                         fpextless = fnp['fullpathnoext']
                         mood_name = '%s.mood'%fpextless
                         png_name  = '%s.mood.png'%fpextless
-                        #print( filename, mood_name ) 
+                        #print( filename, mood_name )
 
                         if options.redo: #force?
                             generate_actions.append(  ('forced recalculation', ffn)  )
                             continue
-                                 
+
                         if want_mood:
                             if mood_name not in filenames:
                                 generate_actions.append(  ('wanted .mood, not present', ffn)  )
                                 continue
-                            if options.redo_age and (time.time() - os.stat(mood_name).st_mtime ) > redo_age_sec:
+                            if options.redo_age is not None and (time.time() - os.stat(mood_name).st_mtime ) > redo_age_sec:
                                 generate_actions.append(  ('.mood too old', ffn)  )
                                 continue
 
@@ -223,7 +204,7 @@ if __name__ == '__main__':
                             if png_name not in filenames:
                                 generate_actions.append(  ('wanted .mood.png, not present', ffn)  )
                                 continue
-                            if options.redo_age and (time.time() - os.stat(png_name).st_mtime ) > redo_age_sec:
+                            if options.redo_age is not None and (time.time() - os.stat(png_name).st_mtime ) > redo_age_sec:
                                 generate_actions.append(  ('.mood.png too old', ffn)  )
                                 continue
 
@@ -238,23 +219,23 @@ if __name__ == '__main__':
             print( "keep:%d  delete:%d"%(nkeeps,ndeletes))
             if (ndeletes>nkeeps or ndeletes>1000) and not options.forceremove:
                 print( "This seems like a very high number of deletes, not actually considering it (you can --force-remove if you are sure)")
-            else:                
+            else:
                 for reason, ffn in remove_actions:
                     if options.dryrun:
                         if options.verbose:
                             print( 'would delete: %r'%ffn)
                     else:
-                        #if options.verbose:                    
+                        #if options.verbose:
                         print( "deleting %r"%ffn)
-                        print( "  (NOTE: actual os.unlink commented until I've done more testing)")
                         #os.unlink(ffn) # commented out until I'm happy it's safe after a rewrite
             print("")
-    
-    
+
+
         ### Generate phase ###################
         if not options.nogenerate:
 
             def workfunc(ffn):
+                ' wraps a single external call to ourselves '
                 #print '= %s ='%ffn
                 #p = subprocess.Popen(['/usr/bin/moodbar','-o',moodffn, ffn ])  # the original
                 cmd = [ 'moodbar-generate' ]
@@ -281,27 +262,31 @@ if __name__ == '__main__':
 
             if options.dryrun:
                 print( "(DRY RUN)  have %d generate jobs"%(len(generate_actions)) )
-            
+
             else:
-                procs = None
-                try:
-                    procs = int(options.parallel)
-                except:
-                    pass
-                if procs==None:
-                    procs = num_cpus(fallback=3)+2
-
                 todo = list( ffn   for _,ffn in generate_actions )
-                print( "Doing %d generate jobs"%(len(todo)) )
-                print( "  in pool of %d procs"%procs )
 
-                mypool = multiprocessing.Pool(procs)
-                for ignore in mypool.imap_unordered(workfunc, todo):
-                    pass
-                mypool.close()
-                mypool.join()
+                if len(todo)==0:
+                    print( "No generate jobs" )
 
-                print("")
-                print( "DONE")
-                print("")
+                else:
+                    procs = None
+                    try:
+                        procs = int(options.parallel)
+                    except:
+                        pass
+                    if procs is None:
+                        procs = num_cpus(fallback=3)+2
 
+                    print( "%d generate jobs"%(len(todo)) )
+                    print( "  in pool of %d procs"%procs )
+
+                    mypool = multiprocessing.Pool(procs)
+                    for ignore in mypool.imap_unordered(workfunc, todo):
+                        pass
+                    mypool.close()
+                    mypool.join()
+
+                    print("")
+                    print( "DONE")
+                    print("")
