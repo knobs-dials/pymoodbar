@@ -1,0 +1,19 @@
+#!/usr/bin/python3
+
+import sys
+import os
+import helpers_moodbar
+
+for mood_filename in sys.argv[1:]:
+
+    if not mood_filename.endswith('.mood'):
+        print( f'SKIP: file does not end with .mood: {repr(mood_filename)}', file=sys.stderr)
+    else: # mood is mood
+
+        png_filename = mood_filename.rsplit('.')[0] + '.png'
+        if os.path.exists( png_filename ):
+            print( f'SKIP: output already exists: {repr(png_filename)}', file=sys.stderr)
+        else:
+            im = helpers_moodbar.mood_image( mood_filename )
+            print(f"SAVING {png_filename} for {mood_filename}", file=sys.stderr)
+            im.save( png_filename )
