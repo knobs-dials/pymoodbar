@@ -17,18 +17,18 @@ if __name__ == '__main__':
     p.add_option("-n", "--nocolor",            dest="nocolor",    default=False, action="store_true", help="Don't use color codes.")
     p.add_option("-t", "--truecolor",          dest="truecolor",  default=False, action="store_true", help="Use true-color codes.")
     p.add_option("-v", "--verbose",            dest="verbose",    default=False, action="store_true", help="Print more individual things.")
-    options, args = p.parse_args()  
+    options, args = p.parse_args()
 
     width = options.width
     try:
-        if width != None: # specified
+        if width is not None: # specified
             width = int(width)
         else: # detect
             import helpers_shellcolor # here only because it has terminal width detection
             width = helpers_shellcolor.tty_size()['cols']
     except ImportError: # detect, but module missing
         pass
-    if width==None:
+    if width is None:
         width = int( 80 )
 
     if options.ascii:
@@ -41,11 +41,11 @@ if __name__ == '__main__':
         style = helpers_moodbar.style_vertical
 
     color = not options.nocolor
-        
+
     for moodfilename in args:
         if options.verbose:
             print( moodfilename)
-        
+
         print( helpers_moodbar.mood_text(moodfilename, width=width, style=style, color=color, truecolor=options.truecolor ) )
 
         # was tesing how much effect resizes have on the bar style, and how much blur we need to reduce that effect
