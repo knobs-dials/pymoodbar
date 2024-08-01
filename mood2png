@@ -10,7 +10,7 @@ for mood_filename in sys.argv[1:]:
         print( f'SKIP: file does not end with .mood: {repr(mood_filename)}', file=sys.stderr)
     else: # mood is mood
 
-        png_filename = mood_filename.rsplit('.')[0] + '.png'
+        png_filename = mood_filename.rsplit('.',1)[0] + '.png'
         if os.path.exists( png_filename ):
             print( f'SKIP: output already exists: {repr(png_filename)}', file=sys.stderr)
         else:
